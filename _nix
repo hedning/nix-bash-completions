@@ -1,0 +1,95 @@
+function _nix_attr_names () {
+    # prefix with 'top' as we let 'top = $defexpr' in NIX_FILE, where
+    # 'builtins.attrNames $prefixed_path' is being run
+    local prefixed_path=top${1:+.$1}
+    local defexpr="$2"
+    nix-instantiate --eval - <<NIX_FILE 2> /dev/null | tr '"[]' ' '
+                let
+                  top_gen = $defexpr;
+                  # --file arguments can be a lambda producing a record too
+                  top = if builtins.typeOf top_gen == "lambda" then top_gen {} else top_gen ;
+                in
+                  builtins.attrNames $prefixed_path
+NIX_FILE
+}
+
+function _nix_attr_paths () {
+
+    # The unnamed top context to look up attribute names
+    local defexpr="$1"
+
+    # The known valid part of the attribute path, eg. 'nixpkgs', if the
+    # currently typed word is 'nixpkgs.mp'
+    local attr_path=""
+    if [[ -z ${cur/*.*/} ]]; then
+        attr_path=${cur%.*}
+    fi
+
+    # Get all the attribute names in $attr_path
+    local -a packages=($(_nix_attr_names "$attr_path" "$defexpr"))
+
+    # Prefix all matches with "${attr_path}."
+    local word_list=${packages[*]/#/${attr_path:+${attr_path}.}}
+    ## Generate the completion list and match against the current word
+    COMPREPLY=( $(compgen -W "${word_list}" ${cur}))
+}
+
+function _nix_build () {
+    local cur prev words cword
+    # Setup current word, previous word, words and index of current word in
+    # words (cword)
+    _init_completion -n = || return
+
+    case "$prev" in
+        -A|--attr)
+            _nix_attr_paths '{ nixpkgs = import <nixpkgs> {}; }'
+            ;;
+    esac
+    return 1
+}
+# Set _nix_build to handle completion for nix-build
+complete -F _nix_build nix-build
+
+function _nix () {
+    local cur prev words cword
+    # Setup current word, previous word, words and index of current word in
+    # words (cword)
+    _init_completion -n = || return
+
+    local -a commands=(add-to-store build cat-nar cat-store copy copy-sigs dump-path edit eval hash-file hash-path log ls-nar ls-store optimise-store path-info repl run search show-config show-derivation sign-paths to-base16 to-base32 to-base64 verify why-depends
+                           )
+
+    local word
+    for word in ${words[*]}; do
+        case $word in
+            run|build|eval)
+
+                if [[ $cur == $word ]]; then
+                    return 0
+                fi
+
+                local defexpr='{ '
+                local -a nix_path=(${NIX_PATH/:/ })
+                for i in ${nix_path[*]}; do
+                    if [[ -z ${i/*=*/} ]]; then
+                        # nixos-config isn't useful for completion
+                        [[ ${i%=*} == nixos-config ]] && continue
+                        defexpr+="${i/=/= import } {}; "
+                    fi
+                done
+                local defexpr+=' }'
+
+                _nix_attr_paths "$defexpr"
+                return 0
+                ;;
+            *)
+                # If word matches a command return
+                if [[ "${commands[*]%$word}" != "${commands[*]}" ]]; then
+                    return 0
+                fi
+        esac
+    done
+
+    COMPREPLY=( $(compgen -W "${commands[*]}" ${cur}))
+}
+complete -F _nix nix
