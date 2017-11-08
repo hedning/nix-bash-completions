@@ -144,7 +144,7 @@ function _parse () {
     esac
 }
 
-function _nix_build () {
+function _nix_legacy () {
     local cur prev words cword
     # Setup current word, previous word, words and index of current word in
     # words (cword)
@@ -178,22 +178,32 @@ function _nix_build () {
             '--max-silent-time:->empty'
             '--timeout:->empty'
             '--readonly-mode'
-            '--log-type:->log-type)'
-            )
-
-    local -a nix_build_opts=(
-        '--drv-link:->empty' '--add-drv-link'
-            '--no-out-link'
-            {--out-link,-o}':->empty'
-            )
+            '--log-type:->log-type')
 
     local state context
     local -a line
     local -A opt_args
-
-    _parse '*:->file' ${nix_common_opts[*]} \
-           ${nix_boilerplate_opts[*]} \
-           ${nix_build_opts[*]} && return 0
+    case "${words[0]}" in
+        nix-build)
+            local -a nix_build_opts=(
+                '--drv-link:->empty' '--add-drv-link'
+                '--no-out-link'
+                {--out-link,-o}':->empty')
+            _parse '*:->file' ${nix_common_opts[*]} \
+                   ${nix_boilerplate_opts[*]} \
+                   ${nix_build_opts[*]} && return 0
+            ;;
+        nix-shell)
+            local -a nix_shell_opts=(
+                '--command:->command'
+                '--exclude:->regex'
+                '--pure'
+                {--packages,-p}':->package_attr_path')
+            _parse '*:->file' ${nix_common_opts[*]} \
+                   ${nix_boilerplate_opts[*]} \
+                   ${nix_shell_opts[*]} && return 0
+            ;;
+    esac
 
     echo state $state >> ~/log/nix
     echo line ${line[*]} >> ~/log/nix
@@ -210,12 +220,23 @@ function _nix_build () {
                 defexpr_path=default.nix
             fi
             _nix_attr_paths "$defexpr_path"
+            return 0
             ;;
+        package_attr_path)
+            _nix_attr_paths "import <nixpkgs>"
+            return 0
+            ;;
+        file)
+            COMPREPLY=($(compgen -f $cur))
+            ;;
+        *)
+            ;;
+
     esac
     return 1
 }
 # Set _nix_build to handle completion for nix-build
-complete -F _nix_build nix-build
+complete -F _nix_legacy nix-build nix-shell
 
 function _nix () {
     local cur prev words cword
