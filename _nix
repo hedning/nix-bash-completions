@@ -79,7 +79,7 @@ function _parse () {
     completors=()
     line=()
     local word
-    for word in ${words[*]}; do
+    for word in ${words[*]} ""; do
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
             echo consume option queue: $word ${opt_queue[0]} >> ~/log/nix
