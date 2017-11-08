@@ -154,12 +154,50 @@ function _nix_build () {
     echo cword $cword >> ~/log/nix
     echo ${words[*]} >> ~/log/nix
 
-    local state
+    local -a nix_boilerplate_opts=('--help' '--version')
+
+    local nix_repair='--repair';
+
+    local nix_search_path_args='-I:->file'
+
+    # Misc Nix options accepted by nixos-rebuild
+    local nix_common_nixos_rebuild=(
+        {--verbose,-v} {--no-build-output,-Q}
+        {--max-jobs,-j}':->empty' '--cores'
+        {--keep-going,-k} {--keep-failed,-K}
+        '--fallback' '--show-trace'
+        '--option:->nixoption:->nixoptionvalue'
+        ${nix_repair})
+
+    # Used in: nix-build, nix-env, nix-instantiate, nix-shell
+    local -a nix_common_opts=(
+        ${nix_common_nixos_rebuild[*]}
+            $_nix_search_path_args
+            {--attr,-A}':->attr_paths' {--expr,-E}
+            '--arg:->empty:->empty' '--argstr:->empty:->empty'
+            '--max-silent-time:->empty'
+            '--timeout:->empty'
+            '--readonly-mode'
+            '--log-type:->log-type)'
+            )
+
+    local -a nix_build_opts=(
+        '--drv-link:->empty' '--add-drv-link'
+            '--no-out-link'
+            {--out-link,-o}':->empty'
+            )
+
+    local state context
     local -a line
-    _parse '*:->file' '-A:->attr_path' && return 0
+    local -A opt_args
+
+    _parse '*:->file' ${nix_common_opts[*]} \
+           ${nix_boilerplate_opts[*]} \
+           ${nix_build_opts[*]} && return 0
 
     echo state $state >> ~/log/nix
     echo line ${line[*]} >> ~/log/nix
+    echo opt_args: ${!opt_args[*]} ${opt_args[*]} >> ~/log/nix
 
     case "$state" in
         attr_path)
