@@ -54,24 +54,23 @@ function _parse () {
                 # Split on first :
                 local -a split=(${spec/:/ })
                 local flag="${split[0]}"
-                echo Adding option ${spec[0]} ${spec[1]}
+ #              echo Adding option ${spec[0]} ${spec[1]}
                 options[$flag]="${split[1]}"
                 ;;
             :*)
-                echo Adding argument $spec
+ #              echo Adding argument $spec
                 arguments+=("$spec")
                 ;;
         esac
         shift
         spec="$1"
     done
-    echo -- finished parsing spec
-    echo arguments: ${arguments[*]}
+    echo -- finished parsing spec >> ~/log/nix
+    echo arguments: ${arguments[*]} >> ~/log/nix
 
 
-    echo -- Parse words
+    echo -- Parse words >> ~/log/nix
     # Use the parsed spec to handle the input
-    local cargument=0
     # opt_arg queue
     local -a opt_queue=()
     local -a used_options=()
@@ -83,28 +82,45 @@ function _parse () {
     for word in ${words[*]}; do
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
-            echo consume option queue: $word ${opt_queue[0]}
+            echo consume option queue: $word ${opt_queue[0]} >> ~/log/nix
+            line+=("$word")
             completors+=(${opt_queue[0]})
             opt_queue=(${opt_queue[*]:1})
         elif [[ "$word" == -* ]]; then
-            echo Consume an option: $word
+            echo Consume an option: $word  >> ~/log/nix
             completors+=("$word")
             # Add to the option argument queue
             opt_queue=(${options["$word"]//:/ })
-            echo option queue: ${opt_queue[*]}
+            echo option queue: ${opt_queue[*]} >> ~/log/nix
         else
             # Consume a regular argument
-            echo Consume a regular argument: $word
+            echo Consume a regular argument: $word >> ~/log/nix
             line+=("$word")
-            echo Adding completor: ${arguments[0]}
-            completors+=(${arguments[0]})
+            echo Adding completor: ${arguments[0]} >> ~/log/nix
+            # Always add argument completors, even if empty
+            completors+=("${arguments[0]}")
             arguments=(${arguments[*]:1})
         fi
     done
 
+    echo -- Finished parsing words: ${completors[*]} >> ~/log/nix
 
-    echo -- Finished parsing words: ${completors[*]}
+    local completor=${completors[$cword]}
+    echo completor $completor >> ~/log/nix
 
+    case "$completor" in
+        -\>*)
+            state="${completor#->}"
+            return 1
+            ;;
+        -*)
+            ## Complete options
+            return 0
+            ;;
+        *)
+            "$completor" &> ~/log/nix
+            return 0
+    esac
 }
 
 function _nix_build () {
@@ -113,9 +129,28 @@ function _nix_build () {
     # words (cword)
     _init_completion -n = || return
 
-    case "$prev" in
-        -A|--attr)
-            _nix_attr_paths '{ nixpkgs = import <nixpkgs> {}; }'
+    echo number ${#words[*]} >> ~/log/nix
+    echo cword $cword >> ~/log/nix
+    echo ${words[*]} >> ~/log/nix
+
+    local state
+    local -a line
+    _parse "-A:->attr_path" && return 0
+
+    echo state $state >> ~/log/nix
+    echo line ${line[*]} >> ~/log/nix
+
+    case "$state" in
+        attr_path)
+            local defexpr_path=""
+            if [[ ${line[1]} ]]; then
+                defexpr_path="import ${line[1]}"
+            elif [[ -e shell.nix && $command_name == nix-shell ]]; then
+                defexpr_path=shell.nix
+            elif [[ -e default.nix ]]; then
+                defexpr_path=default.nix
+            fi
+            _nix_attr_paths "$defexpr_path"
             ;;
     esac
     return 1
