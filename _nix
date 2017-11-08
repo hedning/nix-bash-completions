@@ -123,6 +123,7 @@ function _parse () {
             ;;
         -*)
             ## Complete options
+            COMPREPLY=($(compgen -W "${!options[*]}" -- "$cur"))
             return 0
             ;;
         *)
