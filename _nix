@@ -34,6 +34,79 @@ function _nix_attr_paths () {
     COMPREPLY=( $(compgen -W "${word_list}" ${cur}))
 }
 
+
+function _parse () {
+    # -f[:*]:action:[*]action
+    # [*]-f:action:action
+    # [n]:action
+    # :[*]action
+    local -A options=()
+    local -a arguments=("command")
+
+    # Parse the spec
+    local spec="$1"
+    while [[ "$spec" ]]; do
+        case "$spec" in
+            # *-\>*)
+            #     # check if we're using -> syntax
+            #     ;;
+            -*)
+                # Split on first :
+                local -a split=(${spec/:/ })
+                local flag="${split[0]}"
+                echo Adding option ${spec[0]} ${spec[1]}
+                options[$flag]="${split[1]}"
+                ;;
+            :*)
+                echo Adding argument $spec
+                arguments+=("$spec")
+                ;;
+        esac
+        shift
+        spec="$1"
+    done
+    echo -- finished parsing spec
+    echo arguments: ${arguments[*]}
+
+
+    echo -- Parse words
+    # Use the parsed spec to handle the input
+    local cargument=0
+    # opt_arg queue
+    local -a opt_queue=()
+    local -a used_options=()
+    local current_option=""
+    # The list of completors corresponding to each word
+    completors=()
+    line=()
+    local word
+    for word in ${words[*]}; do
+        if [[ "${opt_queue[*]}" ]]; then
+            # Consume an option argument
+            echo consume option queue: $word ${opt_queue[0]}
+            completors+=(${opt_queue[0]})
+            opt_queue=(${opt_queue[*]:1})
+        elif [[ "$word" == -* ]]; then
+            echo Consume an option: $word
+            completors+=("$word")
+            # Add to the option argument queue
+            opt_queue=(${options["$word"]//:/ })
+            echo option queue: ${opt_queue[*]}
+        else
+            # Consume a regular argument
+            echo Consume a regular argument: $word
+            line+=("$word")
+            echo Adding completor: ${arguments[0]}
+            completors+=(${arguments[0]})
+            arguments=(${arguments[*]:1})
+        fi
+    done
+
+
+    echo -- Finished parsing words: ${completors[*]}
+
+}
+
 function _nix_build () {
     local cur prev words cword
     # Setup current word, previous word, words and index of current word in
