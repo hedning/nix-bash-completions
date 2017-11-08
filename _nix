@@ -57,7 +57,7 @@ function _parse () {
  #              echo Adding option ${spec[0]} ${spec[1]}
                 options[$flag]="${split[1]}"
                 ;;
-            :*)
+            :*|\*:*)
  #              echo Adding argument $spec
                 arguments+=("$spec")
                 ;;
@@ -98,8 +98,16 @@ function _parse () {
             line+=("$word")
             echo Adding completor: ${arguments[0]} >> ~/log/nix
             # Always add argument completors, even if empty
-            completors+=("${arguments[0]}")
-            arguments=(${arguments[*]:1})
+            local action="${arguments[0]}"
+            echo action: $action >> ~/log/nix
+            if [[ "$action" == \*:* ]]; then
+                    completors+=("${action#\*:}")
+                    # Don't shift $arguments when the action is repeatable
+            else
+                completors+=("${action#:}")
+                arguments=(${arguments[*]:1})
+                echo rest of arguments: ${arguments[*]} >> ~/log/nix
+            fi
         fi
     done
 
@@ -135,7 +143,7 @@ function _nix_build () {
 
     local state
     local -a line
-    _parse "-A:->attr_path" && return 0
+    _parse '*:->file' '-A:->attr_path' && return 0
 
     echo state $state >> ~/log/nix
     echo line ${line[*]} >> ~/log/nix
