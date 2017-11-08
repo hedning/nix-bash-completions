@@ -84,13 +84,19 @@ function _parse () {
             # Consume an option argument
             echo consume option queue: $word ${opt_queue[0]} >> ~/log/nix
             line+=("$word")
+            local separator=${opt_args["$current_option"]:+:}
+            opt_args["$current_option"]+=$separator"${word//:/\\:}"
             completors+=(${opt_queue[0]})
             opt_queue=(${opt_queue[*]:1})
         elif [[ "$word" == -* ]]; then
             echo Consume an option: $word  >> ~/log/nix
             completors+=("$word")
-            # Add to the option argument queue
-            opt_queue=(${options["$word"]//:/ })
+            local -a actions=(${options["$word"]//:/ })
+            if [[ "${actions[*]}" ]]; then
+                current_option="$word"
+                # Add to the option argument queue
+                opt_queue=(${actions[*]})
+            fi
             echo option queue: ${opt_queue[*]} >> ~/log/nix
         else
             # Consume a regular argument
