@@ -86,8 +86,14 @@ function _parse () {
             line+=("$word")
             local separator=${opt_args["$current_option"]:+:}
             opt_args["$current_option"]+=$separator"${word//:/\\:}"
-            completors+=(${opt_queue[0]})
-            opt_queue=(${opt_queue[*]:1})
+
+            local action="${opt_queue[0]}"
+            if [[ "$action" == \** ]]; then
+                completors+=(${action#\*})
+            else
+                completors+=(${action})
+                opt_queue=(${opt_queue[*]:1})
+            fi
         elif [[ "$word" == -* ]]; then
             echo Consume an option: $word  >> ~/log/nix
             completors+=("$word")
