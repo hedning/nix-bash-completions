@@ -45,17 +45,35 @@ function _parse () {
 
     # Parse the spec
     local spec="$1"
+    local -A groups
+    local cur_group=""
+    local split group excludes
     while [[ "$spec" ]]; do
+        group=""
+        excludes=""
         case "$spec" in
             # *-\>*)
             #     # check if we're using -> syntax
             #     ;;
+            +)
+                shift
+                cur_group="$1"
+            ;;
+            \(*\)-*)
+                excludes=${spec%%\)*}
+                excludes=${excludes:1}"#"
+                spec="${spec#*\)}"
+                ;&
             -*)
                 # Split on first :
                 local -a split=(${spec/:/ })
-                local flag="${split[0]}"
- #              echo Adding option ${spec[0]} ${spec[1]}
-                options[$flag]="${split[1]}"
+                local flag=${split[0]}
+                if [[ "$cur_group" ]]; then
+                    # Add the flag to the glob group
+                    groups[$cur_group]+=${groups[$cur_group]:+|}$flag
+                fi
+                # Internal representation [group#][excludes#];
+                options[$flag]="$excludes:${split[1]}"
                 ;;
             :*|\*:*)
  #              echo Adding argument $spec
@@ -67,6 +85,8 @@ function _parse () {
     done
     echo -- finished parsing spec >> ~/log/nix
     echo arguments: ${arguments[*]} >> ~/log/nix
+    echo options: ${!options[*]} ${options[*]} >> ~/log/nix
+    echo groups: ${!groups[*]} ${groups[*]} >> ~/log/nix
 
 
     echo -- Parse words >> ~/log/nix
@@ -75,6 +95,7 @@ function _parse () {
     local -a opt_queue=()
     local -a used_options=()
     local current_option=""
+    local excluded_options=""
     # The list of completors corresponding to each word
     completors=()
     line=()
@@ -95,9 +116,16 @@ function _parse () {
                 opt_queue=(${opt_queue[*]:1})
             fi
         elif [[ "$word" == -* ]]; then
-            echo Consume an option: $word  >> ~/log/nix
+            echo Consume an option: $word ${options["$word"]} >> ~/log/nix
             completors+=("$word")
             local -a actions=(${options["$word"]//:/ })
+            # Check if actions contains an exclusion pattern
+            if [[ ${actions[0]} == *\# ]]; then
+                local prefix="${excluded_options:+|}"
+                echo "$word's exclusion group:" ${actions[0]} >> ~/log/nix
+                excluded_options+="$prefix${actions[0]#\#*}"
+                actions=${actions[*]:1}
+            fi
             if [[ "${actions[*]}" ]]; then
                 current_option="$word"
                 # Add to the option argument queue
@@ -126,7 +154,7 @@ function _parse () {
     echo -- Finished parsing words: ${completors[*]} >> ~/log/nix
 
     local completor=${completors[$cword]}
-    echo completor $completor >> ~/log/nix
+    echo completor: $completor >> ~/log/nix
 
     case "$completor" in
         -\>*)
@@ -135,7 +163,8 @@ function _parse () {
             ;;
         -*)
             ## Complete options
-            COMPREPLY=($(compgen -W "${!options[*]}" -- "$cur"))
+            echo excluded_options $excluded_options >> ~/log/nix
+            COMPREPLY=($(compgen -W "${!options[*]}" -X "*($excluded_options)" -- "$cur"))
             return 0
             ;;
         *)
@@ -164,7 +193,7 @@ function _nix_legacy () {
     local nix_common_nixos_rebuild=(
         {--verbose,-v} {--no-build-output,-Q}
         {--max-jobs,-j}':->empty' '--cores'
-        {--keep-going,-k} {--keep-failed,-K}
+        '(--keep-going|-k)'{--keep-going,-k} {--keep-failed,-K}
         '--fallback' '--show-trace'
         '--option:->nixoption:->nixoptionvalue'
         ${nix_repair})
@@ -200,7 +229,9 @@ function _nix_legacy () {
                 '--pure'
                 {--packages,-p}':->package_attr_path')
             _parse '*:->file' ${nix_common_opts[*]} \
+                   + boiler \
                    ${nix_boilerplate_opts[*]} \
+                   + shell \
                    ${nix_shell_opts[*]} && return 0
             ;;
     esac
