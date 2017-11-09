@@ -210,6 +210,13 @@ function _nix_legacy () {
 
     local nix_dry_run='--dry-run'
 
+    local -a nix_gc_common=(
+        '(- --print* --delete)--print-roots'
+            '(-|--print*|--delete)--print-live'
+            '(-|--print*|--delete)--print-dead'
+            '(-|--print*|--delete)--delete'
+            )
+
     local state context
     local -a line
     local -A opt_args
@@ -375,6 +382,76 @@ function _nix_legacy () {
             esac
             ;;
         nix-store)
+            local -a main_options=(
+                {--realise,-r} '--gc' '--delete' {--query,-q} '--add'
+                '--verify' '--verify-path' '--repair-path' '--dump'
+                '--restore' '--export' '--import' '--optimise'
+                {--read-log,-l} '--dump-db' '--load-db' '--print-env'
+                '--query-failed-paths' '--clear-failed-paths')
+            local ex_group="${main_options[*]}"
+            ex_group="(${ex_group// /|})"
+            local -a main_spec=(${main_options[*]/#/$ex_group})
+
+            echo main spec: $main_spec >> ~/log/nix
+
+            local -a command_options=()
+            for word in ${words[*]:1}; do
+                case "$word" in
+                    --realise|-*([:alpha:])r*([:alpha:]))
+                        command_options=(
+                            ${nix_dry_run[*]}
+                            '--ignore-unknown'
+                            '*:->file')
+                        ;;
+                    --gc)
+                        command_options=(
+                            ${nix_gc_common[*]}
+                            '--max-freed:->empty')
+                        ;;
+                    --delete)
+                        command_options=('--ignore-liveness')
+                        ;;
+
+                    --query|-*([:alpha:])q*([:alpha:]))
+                        local -a queries=(
+                            '--outputs' {--requisites,-R} '--references'
+                            '--referrers' '--referrers-closure'
+                            '--deriver' '--graph' '--tree' '--binding'
+                            '--hash' '--size' '--roots')
+                        local query_group="${queries[*]}"
+                        query_group="(${query_group// /|})"
+                        local -a query_spec=(${queries[*]/#/$query_group})
+
+                        local -a query_common=(
+                            '(--use-output|-u)'{--use-output,-u}
+                            '(--force-realise|-f)'{--force-realise,-f})
+
+                        local -a requisite_options=()
+                        for opt in ${words[*]:1}; do
+                            case "$opt" in
+                                --requisites|-*([:alpha:])R*([:alpha:]))
+                                    requisite_options=('--include-outputs')
+                                    ;;
+                            esac
+                        done
+                        command_options=(${query_spec[*]} ${query_common[*]}
+                                         {requisite_options[*]} "*:->file")
+                        ;;
+                    --verify)
+                        command_options=('--check-contents' '--repair')
+                        ;;
+                    --dump-db|--load-db|--query-failed-paths)
+                        # Nothing to complete
+                        ;;
+                    *)
+                        command_options=('*:->file')
+                        ;;
+                esac
+            done
+
+            _parse ${main_spec[*]} ${command_options[*]} && return 0
+
+            echo query command options: ${command_options[*]} >> ~/log/nix
     esac
 
     echo state: $state >> ~/log/nix
