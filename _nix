@@ -458,6 +458,30 @@ function _nix_legacy () {
             _parse ${command_options[*]} ${main_spec[*]} && return 0
             # TODO: Add main_spec completion if there's nothing else to do
             # probably needs to be done as a more general solution in _parse
+            ;;
+        nix-channel)
+            # nix-channel handling
+            _parse \
+                '(-*)--add:->url:->channel_name' \
+                '(-*)--remove:->nix_channels' \
+                '(-*)--list' \
+                '(-*)--update:->nix_channels'\
+                '(-*)--rollback' && return 0
+
+            case "$state" in
+                nix_channels)
+                    channels=($(nix-channel --list))
+                    COMPREPLY=($(compgen -W "${channels[*]}" -- "$cur"))
+                    return 0
+                    ;;
+            esac
+            ;;
+        nix-copy-closure)
+            _parse \
+                '(--from)--to' '(--to)--from' '--sign' '--gzip' \
+                '--include-outputs' '(--use-substitutes -s)'{--use-substitutes,-s} \
+                ':->user_at_host' ':->file' && return 0
+            ;;
     esac
 
     echo state: $state >> ~/log/nix
@@ -494,7 +518,9 @@ function _nix_legacy () {
     return 1
 }
 # Set _nix_build to handle completion for nix-build
-complete -F _nix_legacy nix-build nix-shell nix-env
+ complete -F _nix_legacy \
+          nix-build nix-shell nix-env nix-store \
+          nix-channel nix-copy-closure nix-collect-garbage \
 
 function _nix () {
     local cur prev words cword
