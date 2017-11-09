@@ -131,7 +131,6 @@ function _parse () {
                 # Add to the option argument queue
                 opt_queue=(${actions[*]})
             fi
-            echo option queue: ${opt_queue[*]} >> ~/log/nix
         else
             # Consume a regular argument
             echo Consume a regular argument: $word >> ~/log/nix
@@ -190,7 +189,7 @@ function _nix_legacy () {
     local nix_search_path_args='-I:->file'
 
     # Misc Nix options accepted by nixos-rebuild
-    local nix_common_nixos_rebuild=(
+    local -a nix_common_nixos_rebuild=(
         {--verbose,-v} {--no-build-output,-Q}
         {--max-jobs,-j}':->empty' '--cores'
         '(--keep-going|-k)'{--keep-going,-k} {--keep-failed,-K}
@@ -208,6 +207,8 @@ function _nix_legacy () {
             '--timeout:->empty'
             '--readonly-mode'
             '--log-type:->log-type')
+
+    local nix_dry_run='--dry-run'
 
     local state context
     local -a line
@@ -234,6 +235,75 @@ function _nix_legacy () {
                    + shell \
                    ${nix_shell_opts[*]} && return 0
             ;;
+        nix-env)
+            local -a main_options=(
+                {--install,-i} {--upgrade,-u} {--uninstall,-e} --set-flag {--query,-q} {--switch-profile,-S}
+                --list-generations --delete-generations
+                {--switch-generation,-G} --rollback)
+            local ex_group="${main_options[*]}"
+            ex_group="(${ex_group// /|})"
+            local -a main_spec=(
+                "$ex_group"{--install,-i} "$ex_group"{--upgrade,-u} "$ex_group"{--uninstall,-e}
+                "$ex_group"--set-flag":->flag_name:->flag_value"
+                "$ex_group"{--query,-q} "$ex_group"{--switch-profile,-S}
+                "$ex_group"--list-generations
+                "$ex_group"--delete-generations
+                "$ex_group"{--switch-generation,-G} "$ex_group"--rollback
+            )
+
+            local -a nix_env_common_opts=(
+                    '(--file|-f)'{--file,-f}':->file'
+                    '(--profile|-p)'{--profile,-p}':->profile'
+                    $nix_dry_run
+                    '--system-filter[Only show derivations matching the specified platform]:system:_nix_systems')
+
+            local -a nix_env_b=('(--prebuilt-only|-b)'{--prebuilt-only,-b})
+            local nix_env_from_profile='--from-profile'
+
+            local -a command_options
+            for word in ${words[*]:1}; do
+                case "$word" in
+                --install|-*([:alpha:])i*([:alpha:]))
+                    command_options=(
+                        ${nix_env_b[*]} $nix_env_from_profile
+                        '(--preserve-installed|-P)'{--preserve-installed,-P}
+                        '(--remove-all|-r)'{--remove-all,-r}
+                        '(-A|--attr)'{-A,--attr}
+                        '*:->nix_env_path')
+                    break
+                    ;;
+                esac
+            done
+
+            _parse ${command_options[*]} ${nix_env_common_opts[*]} \
+                   ${nix_boilerplate_opts} ${main_spec[*]} || return 0
+
+            case "$state" in
+                flag_name)
+                    local -a _set_flag_attrs=(
+                        'priority:Resolve package name conflicts'
+                        'keep:Prevent package from being upgraded'
+                        'active:Package is symlinked to profile'
+                    )
+                    # _describe -t commands "Package flag" _set_flag_attrs
+                    ;;
+                flag_value)
+                    local flag_name=$words[$(($CURRENT - 1))]
+                    case $flag_name in
+                        priority)
+                            # __message "Number, lower priority values denote a higher priority"
+                            ;;
+                        keep)
+                            # _values "TF" true false
+                            ;;
+                        active)
+                            # _values "TF" true false
+                            ;;
+                    esac
+                    ;;
+            esac
+            ;;
+        nix-store)
     esac
 
     echo state: $state >> ~/log/nix
