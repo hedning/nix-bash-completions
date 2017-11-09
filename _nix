@@ -298,19 +298,6 @@ function _nix_legacy () {
             local -a nix_env_b=('(--prebuilt-only|-b)'{--prebuilt-only,-b})
             local nix_env_from_profile='--from-profile'
 
-            # Workaround:
-            # opt_args doesn't contain empty options
-            # so can't detect stacked options like '-iA'
-            local expect_attr_paths=false
-            local word
-            for word in ${words[*]:1}; do
-                case $word in
-                    --attr|-*([:alpha:])i*([:alpha:]))
-                        expect_attr_paths=true
-                        ;;
-                esac
-            done
-
             local -a command_options
             for word in ${words[*]:1}; do
                 case "$word" in
@@ -373,8 +360,23 @@ function _nix_legacy () {
 
             case "$state" in
                 nix_env_path)
+                    # Workaround:
+                    # opt_args doesn't contain empty options
+                    # so can't detect stacked options like '-iA'
+                    local expect_attr_paths=false
+                    for word in ${words[*]:1}; do
+                        case $word in
+                            --attr|-*([:alpha:])A*([:alpha:]))
+                                expect_attr_paths=true
+                            ;;
+                        esac
+                    done
+                    if [[ "$expect_attr_paths" == "false" ]]; then
+                        # Don't try to complete names if -A isn't present
+                        return 0
+                    fi
+
                     local defexpr_path=""
-                    print  file: "${opt_args[-f]}" "${opt_args[--file]}" 
                     if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
                         # Assumes you only provide one -f/--file
                         local file=${opt_args[-f]}${opt_args[--file]}
