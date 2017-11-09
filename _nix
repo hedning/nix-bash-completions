@@ -344,6 +344,8 @@ function _nix_legacy () {
                         if [[ -e "$abs_path" ]]; then
                            defexpr_path="import $abs_path {}"
                         fi
+                    else
+                        defexpr_path=$(_nix_gen_defexpr ~/.nix-defexpr)
                     fi
                     echo defexpr_path: $defexpr_path >> ~/log/nix
                     _nix_attr_paths "$defexpr_path"
@@ -408,7 +410,7 @@ function _nix_legacy () {
     return 1
 }
 # Set _nix_build to handle completion for nix-build
-complete -F _nix_legacy nix-build nix-shell
+complete -F _nix_legacy nix-build nix-shell nix-env
 
 function _nix () {
     local cur prev words cword
@@ -453,6 +455,34 @@ function _nix () {
     COMPREPLY=( $(compgen -W "${commands[*]}" ${cur}))
 }
 complete -F _nix nix
+
+# Generate nix code creating the default expression used by 'nix-env -iA'
+_nix_gen_defexpr () {
+    local -a result
+    local -a queue=("$1")
+    echo first argument: "$1" >> ~/log/nix
+    while [[ ${#queue[*]} > 0 ]]; do
+        echo queue ${#queue[*]} >> ~/log/nix
+        local current="${queue[0]}"
+        queue=(${queue[*]:1})
+        if [[ -e "$current/default.nix" ]]; then
+            result+=($current)
+        else
+            local -a children=($(echo "$current"/*))
+            if [[ "$children" != *\* ]]; then
+                queue+=(${children[*]})
+            fi
+        fi
+    done
+
+    local nix_expr="{ "
+    for p in ${result[*]}; do
+        nix_expr+="$(basename $p) = import $p {}; "
+    done
+    nix_expr+="}"
+
+    echo $nix_expr
+}
 
 _expand_tilde()
 {
