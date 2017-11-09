@@ -500,19 +500,13 @@ function _nix_legacy () {
                 "*:->file" && return 0
 
             # TODO: Don't add file completion if we're using anything in $ig
-            case "$state" in
-                hash_algo)
-                    COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
-                    return 0
-                    ;;
-            esac
             ;;
         nix-instantiate)
             _parse \
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_opts[*]} '--xml' '--json' '--add-root' \
                 '--indirect' '--parse' '--eval' "--find-file:*:->file"\
-                '--strict' '--read-write-mode' '*:->file'
+                '--strict' '--read-write-mode' '*:->file' && return 0
             ;;
         nix-install-package)
             _parse \
@@ -520,8 +514,12 @@ function _nix_legacy () {
                 '(--profile -p)'{--profile,-p}':->nix_profile' \
                 '--set' \
                 '--url:->url' \
-                ':->file'
+                ':->file' && return 0
             # TODO: make --url and :->file mutually exclusive
+            ;;
+        nix-prefetch-url)
+            _parse \
+                '--type:->hash_algo' ':->url' ':->empty' && return 0
             ;;
     esac
 
@@ -551,6 +549,11 @@ function _nix_legacy () {
         file)
             COMPREPLY=($(compgen -f $cur))
             ;;
+
+        hash_algo)
+            COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
+            return 0
+            ;;
         *)
             echo $state not implemented yet >> ~/log/nix
             ;;
@@ -562,7 +565,9 @@ function _nix_legacy () {
  complete -F _nix_legacy \
           nix-build nix-shell nix-env nix-store \
           nix-channel nix-copy-closure nix-collect-garbage \
-          nix-hash nix-collect-garbage
+          nix-hash nix-collect-garbage nix-instantiate \
+          nix-install-package nix-prefetch-url
+
 
 function _nix () {
     local cur prev words cword
