@@ -68,7 +68,15 @@ function _parse () {
     local split group excludes
     while [[ "$spec" ]]; do
         group=""
+
         excludes=""
+        # check for an exclusion group
+        # Strip it from $spec if found
+        if [[ "$spec" == \(* ]]; then
+            excludes=${spec%%\)*}
+            excludes=${excludes:1}"#"
+            spec="${spec#*\)}"
+        fi
         case "$spec" in
             # *-\>*)
             #     # check if we're using -> syntax
@@ -77,11 +85,6 @@ function _parse () {
                 shift
                 cur_group="$1"
             ;;
-            \(*\)-*)
-                excludes=${spec%%\)*}
-                excludes=${excludes:1}"#"
-                spec="${spec#*\)}"
-                ;&
             -*)
                 # Split on first :
                 local -a split=(${spec/:/ })
@@ -135,7 +138,26 @@ function _parse () {
                 completors+=(${action})
                 opt_queue=(${opt_queue[*]:1})
             fi
+        elif [[ "$word" == --* ]]; then
+            print "Consume an option: $word ${options["$word"]}"
+            completors+=("$word")
+            local -a actions=(${options["$word"]//:/ })
+            # Check if actions contains an exclusion pattern
+            if [[ ${actions[0]} == *\# ]]; then
+                local prefix="${excluded_options:+|}"
+                excluded_options+="$prefix${actions[0]:0:-1}"
+                print "$word's exclusion group:" "$prefix${actions[0]:0:-1}"
+                actions=(${actions[*]:1})
+            fi
+            if [[ "${actions[*]}" ]]; then
+                current_option="$word"
+                # Add to the option argument queue
+                print  "option arguments: ${actions[*]}"
+                opt_queue=(${actions[*]})
+                print  "option queue: ${opt_queue[*]}"
+            fi
         elif [[ "$word" == -* ]]; then
+            # Short option, possibly stacked
             print "Consume an option: $word ${options["$word"]}"
             completors+=("$word")
             local -a actions=(${options["$word"]//:/ })
