@@ -122,8 +122,8 @@ function _parse () {
             # Check if actions contains an exclusion pattern
             if [[ ${actions[0]} == *\# ]]; then
                 local prefix="${excluded_options:+|}"
-                echo "$word's exclusion group:" ${actions[0]} >> ~/log/nix
-                excluded_options+="$prefix${actions[0]#\#*}"
+                excluded_options+="$prefix${actions[0]:0:-1}"
+                echo "$word's exclusion group:" "$prefix${actions[0]:0:-1}" >> ~/log/nix
                 actions=(${actions[*]:1})
             fi
             if [[ "${actions[*]}" ]]; then
