@@ -285,6 +285,48 @@ function _nix_legacy () {
                         '*:->nix_env_path')
                     break
                     ;;
+                --upgrade|-*([:alpha:])u*([:alpha:]))
+                    command_options=(
+                        ${nix_env_b[*]}
+                        ${nix_env_from_profile[*]}
+                        '(-lt|-leq|-eq|--always)--lt'
+                        '(-lt|-leq|-eq|--always)--leq'
+                        '(-lt|-leq|-eq|--always)--eq'
+                        '(-lt|-leq|-eq|--always)--always'
+                        '*:->installed_packages')
+                    break
+                    ;;
+                --uninstall|-*([:alpha:])e*([:alpha:]))
+                    command_options=('*:->installed_packages')
+                    break
+                    ;;
+                --set-flag)
+                    break
+                    ;;
+                --query|-*([:alpha:])q*([:alpha:]))
+                    command_options=(
+                        ${nix_env_b[*]}
+                        '(--available|-a)'{--available,-a}
+                        '(--status|-s)'{--status,-s}
+                        '(--attr-path|-P)'{--attr-path,-P}
+                        '(--compare-versions|-c)'{--compare-versions,-c}
+                        '--no-name' '--system' '--drv-path' '--out-path'
+                        '--description' '--xml' '--json' '--meta')
+                    break
+                    ;;
+                    --switch-profile|-*([:alpha:])S*([:alpha:]))
+                        command_options=(':->_nix_profile')
+                        break
+                        ;;
+                    --delete-generations)
+                        command_options=('*:->nix_generation')
+                        break
+                        ;;
+                    --switch-generation|-[^-]#G[^-]#)
+                        command_options=(':->nix_generation')
+                        break
+                        ;;
+
                 esac
             done
 
@@ -295,7 +337,7 @@ function _nix_legacy () {
                 nix-env_path)
                     local defexpr_path=""
                     if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
-                       defexpr_path="import ${realpath file} {}"
+                       defexpr_path="import ${realpath $file} {}"
                     fi
                     _nix_attr_paths "$defexpr_path"
                     ;;
