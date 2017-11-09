@@ -90,7 +90,6 @@ function _parse () {
                     # Add the flag to the glob group
                     groups[$cur_group]+=${groups[$cur_group]:+|}$flag
                 fi
-                print  Add flag: $flag 
                 # Internal representation [group#][excludes#];
                 options[$flag]="$excludes:${split[1]}"
                 ;;
@@ -102,13 +101,13 @@ function _parse () {
         shift
         spec="$1"
     done
-    print  -- finished parsing spec 
-    print  arguments: ${arguments[*]} 
-    print "options" ${!options[*]} >> ~/log/nix
+    print  "    --**--" "-- Finished parsing spec"
+    print  "arguments:" "${arguments[*]}"
+    print "options" "${!options[*]}" >> ~/log/nix
     # print  groups: ${!groups[*]} ${groups[*]} 
 
 
-    print  -- Parse words 
+    print  "-- Parse words"
     # Use the parsed spec to handle the input
     # opt_arg queue
     local -a opt_queue=()
@@ -124,7 +123,7 @@ function _parse () {
     for word in ${words[*]} ""; do
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
-            print  consume option queue: $word ${opt_queue[0]} 
+            print "consume option queue: $word ${opt_queue[0]}"
             line+=("$word")
             local separator=${opt_args["$current_option"]:+:}
             opt_args["$current_option"]+=$separator"${word//:/\\:}"
@@ -137,51 +136,50 @@ function _parse () {
                 opt_queue=(${opt_queue[*]:1})
             fi
         elif [[ "$word" == -* ]]; then
-            print  Consume an option: $word ${options["$word"]} 
+            print "Consume an option: $word ${options["$word"]}"
             completors+=("$word")
             local -a actions=(${options["$word"]//:/ })
             # Check if actions contains an exclusion pattern
             if [[ ${actions[0]} == *\# ]]; then
                 local prefix="${excluded_options:+|}"
                 excluded_options+="$prefix${actions[0]:0:-1}"
-                print  "$word's exclusion group:" "$prefix${actions[0]:0:-1}" 
+                print "$word's exclusion group:" "$prefix${actions[0]:0:-1}" 
                 actions=(${actions[*]:1})
             fi
             if [[ "${actions[*]}" ]]; then
                 current_option="$word"
                 # Add to the option argument queue
-                print  option arguments: ${actions[*]} 
+                print  "option arguments: ${actions[*]}"
                 opt_queue=(${actions[*]})
-                print  option queue: ${opt_queue[*]} 
+                print  "option queue: ${opt_queue[*]}"
             fi
         else
             # Consume a regular argument
-            print  Consume a regular argument: $word 
+            print  "Consume a regular argument: $word"
             line+=("$word")
-            print  Adding completor: ${arguments[0]} 
+            print  "Adding completor: ${arguments[0]}"
             # Always add argument completors, even if empty
             local action="${arguments[0]}"
-            print  action: $action 
+            print actio"n: $action"
             if [[ "$action" == \*:* ]]; then
                     completors+=("${action#\*:}")
                     # Don't shift $arguments when the action is repeatable
             else
                 completors+=("${action#:}")
                 arguments=(${arguments[*]:1})
-                print  rest of arguments: ${arguments[*]} 
+                print  "rest of arguments: ${arguments[*]}"
             fi
         fi
     done
 
-    print  -- Finished parsing words: ${completors[*]} 
+    print  "-- Finished parsing words: ${completors[*]}"
 
     local completor=${completors[$cword]}
-    print  completor: "$completor" 
+    print  "completor: $completor" 
 
     case "$completor" in
         -\>*)
             state="${completor#->}"
-            print  state: $state 
             return 1
             ;;
         -*)
@@ -193,7 +191,7 @@ function _parse () {
             #     # resolve groups to globs
             #     excluded_options="${excluded_options//$g/${groups[$g]}}"
             # done
-            print  excluded_options $excluded_options 
+            print  "excluded_options $excluded_options"
             COMPREPLY=($(compgen -W "${!options[*]}" -X "*($excluded_options)" -- "$cur"))
             return 0
             ;;
@@ -211,9 +209,9 @@ function _nix_legacy () {
     # words (cword)
     _init_completion -n = || return
 
-    print  number ${#words[*]} 
-    print  cword $cword 
-    print  ${words[*]} 
+    print  "command line: ${words[*]}"
+    print  "number ${#words[*]}"
+    print  "cword $cword"
 
     local -a nix_boilerplate_opts=('--help' '--version')
 
@@ -387,7 +385,7 @@ function _nix_legacy () {
                     else
                         defexpr_path=$(_nix_gen_defexpr ~/.nix-defexpr)
                     fi
-                    print  defexpr_path: $defexpr_path 
+                    print  "defexpr_path: $defexpr_path"
                     _nix_attr_paths "$defexpr_path"
                     ;;
                 flag_name)
@@ -424,8 +422,6 @@ function _nix_legacy () {
             local ex_group="${main_options[*]}"
             ex_group="(${ex_group// /|})"
             local -a main_spec=(${main_options[*]/#/$ex_group})
-
-            print  main spec: $main_spec 
 
             local -a command_options=()
             for word in ${words[*]:1}; do
@@ -641,9 +637,9 @@ function _nix_legacy () {
            ;;
     esac
 
-    print  state: $state 
-    print  line: ${line[*]} 
-    print  opt_args: ${!opt_args[*]} ${opt_args[*]} 
+    print  "state: $state"
+    print  "line: ${line[*]}"
+    print  "opt_args: ${!opt_args[*]} ${opt_args[*]}"
 
     # Handle completion of different types of arguments
     case "$state" in
@@ -656,7 +652,7 @@ function _nix_legacy () {
             elif [[ -e default.nix ]]; then
                 defexpr_path=default.nix
             fi
-            print  defexpr: "$defexpr_path" 
+            print  "defexpr: $defexpr_path" 
             _nix_attr_paths "$defexpr_path"
             return 0
             ;;
@@ -675,7 +671,7 @@ function _nix_legacy () {
             return 0
             ;;
         *)
-            print  $state not implemented yet 
+            print  "$state not implemented yet"
             ;;
 
     esac
