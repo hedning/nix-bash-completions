@@ -404,6 +404,7 @@ function _nix_legacy () {
             COMPREPLY=($(compgen -f $cur))
             ;;
         *)
+            echo $state not implemented yet >> ~/log/nix
             ;;
 
     esac
