@@ -551,6 +551,56 @@ function _nix_legacy () {
                 $nix_search_path_args '--root:->directory'\
                 '--show-trace' '--chroot' && return 0
             ;;
+        nixos-generate-config)
+            _parse '--no-filesystems' '--show-hardware-config' '--force'\
+                   '--root:->directory' '--dir:->directory' && return 0
+            ;;
+        nixos-version)
+            _parse '(-*)'{--hash,--revision} && return 0
+            ;;
+        nixos-container)
+            local -a main_commands=(
+                'list' 'create' 'destroy' 'start' 'stop' 'status' 'update'
+                'login' 'root-login' 'run' 'show-ip' 'show-host-key')
+
+            local container_name=':->container';
+            local container_config='--config:->container_config';
+            local -a main_options=()
+            for word in ${words[*]:1}; do
+                case "$word" in
+                    create)
+                        main_options=(
+                            $container_name $container_config '--config-file:->file'
+                            '--system-path:->file' '--ensure-unique-name' '--auto-start')
+                        break
+                        ;;
+                    run)
+                        main_options=($container_name)
+                        break
+                        ;;
+                    update)
+                        main_options=($container_name $container_config)
+                        break
+                        ;;
+                    destroy|start|stop|status|login|root-login|show-ip|show-host-key)
+                        main_options=($container_name)
+                        break
+                        ;;
+                esac
+            done
+            _parse '--help' ':->main_commands' ${main_options[*]} && return 0
+            case "$state" in
+                main_commands)
+                    COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
+                    return 0
+                    ;;
+                container)
+                    local -a containers=($(nixos-container list))
+                    COMPREPLY=($(compgen -W "${containers[*]}" -- "$cur"))
+                    return 0
+                    ;;
+            esac
+            ;;
     esac
 
     echo state: $state >> ~/log/nix
@@ -579,7 +629,9 @@ function _nix_legacy () {
         file)
             COMPREPLY=($(compgen -f $cur))
             ;;
-
+        directory)
+            COMPREPLY=($(compgen -d $cur))
+            ;;
         hash_algo)
             COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
             return 0
@@ -597,7 +649,8 @@ function _nix_legacy () {
           nix-channel nix-copy-closure nix-collect-garbage \
           nix-hash nix-collect-garbage nix-instantiate \
           nix-install-package nix-prefetch-url nix-push \
-          nixos-rebuild nixos-install
+          nixos-rebuild nixos-install nixos-version \
+          nixos-container nixos-generate-config
 
 
 function _nix () {
