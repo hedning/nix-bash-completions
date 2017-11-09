@@ -124,7 +124,7 @@ function _parse () {
                 local prefix="${excluded_options:+|}"
                 echo "$word's exclusion group:" ${actions[0]} >> ~/log/nix
                 excluded_options+="$prefix${actions[0]#\#*}"
-                actions=${actions[*]:1}
+                actions=(${actions[*]:1})
             fi
             if [[ "${actions[*]}" ]]; then
                 current_option="$word"
