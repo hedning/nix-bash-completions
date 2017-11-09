@@ -482,6 +482,31 @@ function _nix_legacy () {
                 '--include-outputs' '(--use-substitutes -s)'{--use-substitutes,-s} \
                 ':->user_at_host' ':->file' && return 0
             ;;
+        nix-collect-garbage)
+            _parse \
+                '(--delete-old|-d)'{--delete-old,-d} \
+                '--delete-older-than:->empty' \
+                ${nix_dry_run[*]} && return 0
+            ;;
+        nix-hash)
+            local -a ig=( '--to-base16' '--to-base32' )
+            _parse \
+                '(-*)--to-base16:->hash' \
+                '(-*)--to-base32:->hash' \
+                "(&ig)--flat" \
+                "($ig)--base32" \
+                "($ig)--truncate" \
+                "($ig)--type:->hash_algo" \
+                "*:->file" && return 0
+
+            # TODO: Don't add file completion if we're using anything in $ig
+            case "$state" in
+                hash_algo)
+                    COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
+                    return 0
+                    ;;
+            esac
+            ;;
     esac
 
     echo state: $state >> ~/log/nix
@@ -521,6 +546,7 @@ function _nix_legacy () {
  complete -F _nix_legacy \
           nix-build nix-shell nix-env nix-store \
           nix-channel nix-copy-closure nix-collect-garbage \
+          nix-hash nix-collect-garbage
 
 function _nix () {
     local cur prev words cword
