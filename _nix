@@ -322,7 +322,7 @@ function _nix_legacy () {
                     break
                     ;;
                     --switch-profile|-*([:alpha:])S*([:alpha:]))
-                        command_options=(':->_nix_profile')
+                        command_options=(':->nix_profile')
                         break
                         ;;
                     --delete-generations)
@@ -506,6 +506,22 @@ function _nix_legacy () {
                     return 0
                     ;;
             esac
+            ;;
+        nix-instantiate)
+            _parse \
+                ${nix_boilerplate_opts[*]} \
+                ${nix_common_opts[*]} '--xml' '--json' '--add-root' \
+                '--indirect' '--parse' '--eval' "--find-file:*:->file"\
+                '--strict' '--read-write-mode' '*:->file'
+            ;;
+        nix-install-package)
+            _parse \
+                '--non-interactive' \
+                '(--profile -p)'{--profile,-p}':->nix_profile' \
+                '--set' \
+                '--url:->url' \
+                ':->file'
+            # TODO: make --url and :->file mutually exclusive
             ;;
     esac
 
