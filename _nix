@@ -1,9 +1,17 @@
+function print () {
+    while [[ "$1" ]]; do
+        print  "$1" 
+        shift
+    done
+}
+
+#!/run/current-system/sw/bin/bash
 function _nix_attr_names () {
     # prefix with 'top' as we let 'top = $defexpr' in NIX_FILE, where
     # 'builtins.attrNames $prefixed_path' is being run
     local prefixed_path=top${1:+.$1}
     local defexpr="$2"
-    nix-instantiate --eval - <<NIX_FILE 2> /dev/null | tr '"[]' ' '
+    nix-instantiate --eval - <<NIX_FILE 2> ~/log/nix | tr '"[]' ' '
                 let
                   top_gen = $defexpr;
                   # --file arguments can be a lambda producing a record too
@@ -72,6 +80,7 @@ function _parse () {
                     # Add the flag to the glob group
                     groups[$cur_group]+=${groups[$cur_group]:+|}$flag
                 fi
+                print  Add flag: $flag 
                 # Internal representation [group#][excludes#];
                 options[$flag]="$excludes:${split[1]}"
                 ;;
@@ -83,27 +92,29 @@ function _parse () {
         shift
         spec="$1"
     done
-    echo -- finished parsing spec >> ~/log/nix
-    echo arguments: ${arguments[*]} >> ~/log/nix
-    echo options: ${!options[*]} ${options[*]} >> ~/log/nix
-    echo groups: ${!groups[*]} ${groups[*]} >> ~/log/nix
+    print  -- finished parsing spec 
+    print  arguments: ${arguments[*]} 
+    print "options" ${!options[*]} >> ~/log/nix
+    # print  groups: ${!groups[*]} ${groups[*]} 
 
 
-    echo -- Parse words >> ~/log/nix
+    print  -- Parse words 
     # Use the parsed spec to handle the input
     # opt_arg queue
     local -a opt_queue=()
     local -a used_options=()
     local current_option=""
     local excluded_options=""
-    # The list of completors corresponding to each word
-    completors=()
+    # The list of completors corresponding to each word in words
+    local completors=()
     line=()
-    local word
+
+    local word=""
+    opt_args=()
     for word in ${words[*]} ""; do
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
-            echo consume option queue: $word ${opt_queue[0]} >> ~/log/nix
+            print  consume option queue: $word ${opt_queue[0]} 
             line+=("$word")
             local separator=${opt_args["$current_option"]:+:}
             opt_args["$current_option"]+=$separator"${word//:/\\:}"
@@ -116,71 +127,83 @@ function _parse () {
                 opt_queue=(${opt_queue[*]:1})
             fi
         elif [[ "$word" == -* ]]; then
-            echo Consume an option: $word ${options["$word"]} >> ~/log/nix
+            print  Consume an option: $word ${options["$word"]} 
             completors+=("$word")
             local -a actions=(${options["$word"]//:/ })
             # Check if actions contains an exclusion pattern
             if [[ ${actions[0]} == *\# ]]; then
                 local prefix="${excluded_options:+|}"
                 excluded_options+="$prefix${actions[0]:0:-1}"
-                echo "$word's exclusion group:" "$prefix${actions[0]:0:-1}" >> ~/log/nix
+                print  "$word's exclusion group:" "$prefix${actions[0]:0:-1}" 
                 actions=(${actions[*]:1})
             fi
             if [[ "${actions[*]}" ]]; then
                 current_option="$word"
                 # Add to the option argument queue
+                print  option arguments: ${actions[*]} 
                 opt_queue=(${actions[*]})
+                print  option queue: ${opt_queue[*]} 
             fi
         else
             # Consume a regular argument
-            echo Consume a regular argument: $word >> ~/log/nix
+            print  Consume a regular argument: $word 
             line+=("$word")
-            echo Adding completor: ${arguments[0]} >> ~/log/nix
+            print  Adding completor: ${arguments[0]} 
             # Always add argument completors, even if empty
             local action="${arguments[0]}"
-            echo action: $action >> ~/log/nix
+            print  action: $action 
             if [[ "$action" == \*:* ]]; then
                     completors+=("${action#\*:}")
                     # Don't shift $arguments when the action is repeatable
             else
                 completors+=("${action#:}")
                 arguments=(${arguments[*]:1})
-                echo rest of arguments: ${arguments[*]} >> ~/log/nix
+                print  rest of arguments: ${arguments[*]} 
             fi
         fi
     done
 
-    echo -- Finished parsing words: ${completors[*]} >> ~/log/nix
+    print  -- Finished parsing words: ${completors[*]} 
 
     local completor=${completors[$cword]}
-    echo completor: $completor >> ~/log/nix
+    print  completor: "$completor" 
 
     case "$completor" in
         -\>*)
             state="${completor#->}"
+            print  state: $state 
             return 1
             ;;
         -*)
             ## Complete options
-            echo excluded_options $excluded_options >> ~/log/nix
+            # print  excluded_options before: $excluded_options 
+            # local g
+            # for g in ${!groups[*]}; do
+            #     # echo group: $g, "${groups[$g]}"
+            #     # resolve groups to globs
+            #     excluded_options="${excluded_options//$g/${groups[$g]}}"
+            # done
+            print  excluded_options $excluded_options 
             COMPREPLY=($(compgen -W "${!options[*]}" -X "*($excluded_options)" -- "$cur"))
             return 0
             ;;
-        *)
-            "$completor" &> ~/log/nix
+        _*)
+            print $("$completor")
             return 0
+            ;;
     esac
 }
 
+# Completions for all nix-commands except for nix
 function _nix_legacy () {
     local cur prev words cword
     # Setup current word, previous word, words and index of current word in
     # words (cword)
     _init_completion -n = || return
 
-    echo number ${#words[*]} >> ~/log/nix
-    echo cword $cword >> ~/log/nix
-    echo ${words[*]} >> ~/log/nix
+    print  number ${#words[*]} 
+    print  cword $cword 
+    print  ${words[*]} 
 
     local -a nix_boilerplate_opts=('--help' '--version')
 
@@ -200,7 +223,7 @@ function _nix_legacy () {
     # Used in: nix-build, nix-env, nix-instantiate, nix-shell
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
-            $_nix_search_path_args
+            ${nix_search_path_args}
             {--attr,-A}':->attr_path' {--expr,-E}
             '--arg:->empty:->empty' '--argstr:->empty:->empty'
             '--max-silent-time:->empty'
@@ -268,7 +291,7 @@ function _nix_legacy () {
             local nix_env_from_profile='--from-profile'
 
             # Workaround:
-            # opt_args doesn't contain the first option
+            # opt_args doesn't contain empty options
             # so can't detect stacked options like '-iA'
             local expect_attr_paths=false
             local word
@@ -343,7 +366,7 @@ function _nix_legacy () {
             case "$state" in
                 nix_env_path)
                     local defexpr_path=""
-                    echo file: "${opt_args[-f]}" "${opt_args[--file]}" >> ~/log/nix
+                    print  file: "${opt_args[-f]}" "${opt_args[--file]}" 
                     if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
                         # Assumes you only provide one -f/--file
                         local file=${opt_args[-f]}${opt_args[--file]}
@@ -354,7 +377,7 @@ function _nix_legacy () {
                     else
                         defexpr_path=$(_nix_gen_defexpr ~/.nix-defexpr)
                     fi
-                    echo defexpr_path: $defexpr_path >> ~/log/nix
+                    print  defexpr_path: $defexpr_path 
                     _nix_attr_paths "$defexpr_path"
                     ;;
                 flag_name)
@@ -392,7 +415,7 @@ function _nix_legacy () {
             ex_group="(${ex_group// /|})"
             local -a main_spec=(${main_options[*]/#/$ex_group})
 
-            echo main spec: $main_spec >> ~/log/nix
+            print  main spec: $main_spec 
 
             local -a command_options=()
             for word in ${words[*]:1}; do
@@ -608,10 +631,9 @@ function _nix_legacy () {
            ;;
     esac
 
-    echo state: $state >> ~/log/nix
-    echo line: ${line[*]} >> ~/log/nix
-    echo opt_args: ${!opt_args[*]} ${opt_args[*]} >> ~/log/nix
-    echo >> ~/log/nix
+    print  state: $state 
+    print  line: ${line[*]} 
+    print  opt_args: ${!opt_args[*]} ${opt_args[*]} 
 
     # Handle completion of different types of arguments
     case "$state" in
@@ -624,7 +646,7 @@ function _nix_legacy () {
             elif [[ -e default.nix ]]; then
                 defexpr_path=default.nix
             fi
-            echo defexpr: "$defexpr_path" >> ~/log/nix
+            print  defexpr: "$defexpr_path" 
             _nix_attr_paths "$defexpr_path"
             return 0
             ;;
@@ -632,7 +654,7 @@ function _nix_legacy () {
             _nix_attr_paths "import <nixpkgs>"
             return 0
             ;;
-        file)
+        file|nix_file)
             COMPREPLY=($(compgen -f $cur))
             ;;
         directory)
@@ -643,7 +665,7 @@ function _nix_legacy () {
             return 0
             ;;
         *)
-            echo $state not implemented yet >> ~/log/nix
+            print  $state not implemented yet 
             ;;
 
     esac
@@ -665,8 +687,7 @@ function _nix () {
     # words (cword)
     _init_completion -n = || return
 
-    local -a commands=(add-to-store build cat-nar cat-store copy copy-sigs dump-path edit eval hash-file hash-path log ls-nar ls-store optimise-store path-info repl run search show-config show-derivation sign-paths to-base16 to-base32 to-base64 verify why-depends
-                           )
+    local -a commands=(add-to-store build cat-nar cat-store copy copy-sigs dump-path edit eval hash-file hash-path log ls-nar ls-store optimise-store path-info repl run search show-config show-derivation sign-paths to-base16 to-base32 to-base64 verify why-depends)
 
     local word
     for word in ${words[*]}; do
@@ -707,9 +728,7 @@ complete -F _nix nix
 _nix_gen_defexpr () {
     local -a result
     local -a queue=("$1")
-    echo first argument: "$1" >> ~/log/nix
     while [[ ${#queue[*]} > 0 ]]; do
-        echo queue ${#queue[*]} >> ~/log/nix
         local current="${queue[0]}"
         queue=(${queue[*]:1})
         if [[ -e "$current/default.nix" ]]; then
