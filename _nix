@@ -39,6 +39,8 @@ function _nix_attr_paths () {
 
     # Prefix all matches with "${attr_path}."
     local word_list=${packages[*]/#/${attr_path:+${attr_path}.}}
+    # Don't insert space as we'll too often have to backspace and add a '.'
+    compopt -o nospace
     ## Generate the completion list and match against the current word
     COMPREPLY=( $(compgen -W "${word_list}" ${cur}))
 }
