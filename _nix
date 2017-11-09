@@ -289,7 +289,7 @@ function _nix_legacy () {
             done
 
             _parse ${command_options[*]} ${nix_env_common_opts[*]} \
-                   ${nix_boilerplate_opts} ${main_spec[*]} || return 0
+                   ${nix_boilerplate_opts} ${main_spec[*]} && return 0
 
             case "$state" in
                 flag_name)
