@@ -202,7 +202,7 @@ function _nix_legacy () {
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
             $_nix_search_path_args
-            {--attr,-A}':->attr_paths' {--expr,-E}
+            {--attr,-A}':->attr_path' {--expr,-E}
             '--arg:->empty:->empty' '--argstr:->empty:->empty'
             '--max-silent-time:->empty'
             '--timeout:->empty'
@@ -227,7 +227,7 @@ function _nix_legacy () {
                 '--command:->command'
                 '--exclude:->regex'
                 '--pure'
-                {--packages,-p}':->package_attr_path')
+                '(--packages|-p|shell)'{--packages,-p}':->package_attr_path')
             _parse '*:->file' ${nix_common_opts[*]} \
                    + boiler \
                    ${nix_boilerplate_opts[*]} \
@@ -236,20 +236,22 @@ function _nix_legacy () {
             ;;
     esac
 
-    echo state $state >> ~/log/nix
-    echo line ${line[*]} >> ~/log/nix
+    echo state: $state >> ~/log/nix
+    echo line: ${line[*]} >> ~/log/nix
     echo opt_args: ${!opt_args[*]} ${opt_args[*]} >> ~/log/nix
+    echo >> ~/log/nix
 
     case "$state" in
         attr_path)
             local defexpr_path=""
             if [[ ${line[1]} ]]; then
-                defexpr_path="import ${line[1]}"
+                defexpr_path="import ${line[1]} {}"
             elif [[ -e shell.nix && $command_name == nix-shell ]]; then
                 defexpr_path=shell.nix
             elif [[ -e default.nix ]]; then
                 defexpr_path=default.nix
             fi
+            echo defexpr: "$defexpr_path" >> ~/log/nix
             _nix_attr_paths "$defexpr_path"
             return 0
             ;;
