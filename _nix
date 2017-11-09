@@ -735,13 +735,15 @@ function _nix () {
                     "*"{-v,--verbose}"[increase verbosity level]"
                     "(--version)"--version"[show version information]")
 
-    local -a main_commands
-        local IFS=$'\n'
-        main_commands=($(nix --help | sed -E \
-                                          -e '/^Available commands/,/^$/!d' \
-                                          -e '/^Available commands/d' \
-                                          -e '/^$/d' \
-                                          -e 's=^ +([0-9a-z-]*) +(.*)$=\1:\2='))
+    # Extract the commands with descriptions
+    # like ('command:some description' 'run:run some stuff')
+    local -a main_commands=(
+        $(IFS=$'\n'
+          nix --help | sed -E \
+                           -e '/^Available commands/,/^$/!d' \
+                           -e '/^Available commands/d' \
+                           -e '/^$/d' \
+                           -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
     }
 
     function _describe_nix_commands {
