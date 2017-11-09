@@ -260,6 +260,19 @@ function _nix_legacy () {
             local -a nix_env_b=('(--prebuilt-only|-b)'{--prebuilt-only,-b})
             local nix_env_from_profile='--from-profile'
 
+            # Workaround:
+            # opt_args doesn't contain the first option
+            # so can't detect stacked options like '-iA'
+            local expect_attr_paths=false
+            local word
+            for word in ${words[*]:1}; do
+                case $word in
+                    --attr|-*([:alpha:])i*([:alpha:]))
+                        expect_attr_paths=true
+                        ;;
+                esac
+            done
+
             local -a command_options
             for word in ${words[*]:1}; do
                 case "$word" in
