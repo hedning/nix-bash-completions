@@ -545,6 +545,12 @@ function _nix_legacy () {
                     return 0
                     ;;
             esac
+            ;;
+        nixos-install)
+            _parse \
+                $nix_search_path_args '--root:->directory'\
+                '--show-trace' '--chroot' && return 0
+            ;;
     esac
 
     echo state: $state >> ~/log/nix
@@ -591,7 +597,7 @@ function _nix_legacy () {
           nix-channel nix-copy-closure nix-collect-garbage \
           nix-hash nix-collect-garbage nix-instantiate \
           nix-install-package nix-prefetch-url nix-push \
-          nixos-rebuild
+          nixos-rebuild nixos-install
 
 
 function _nix () {
