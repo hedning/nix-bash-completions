@@ -896,6 +896,13 @@ function _nix () {
                ${command_arguments[*]} \
                ${common_options[*]} \
                ${command_options[*]}
+
+    case "$state" in
+        main_command)
+            COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
+            return 0
+            ;;
+    esac
 }
 complete -F _nix nix
 
