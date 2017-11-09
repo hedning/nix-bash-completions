@@ -530,6 +530,21 @@ function _nix_legacy () {
                 '--url-prefix:->url'\
                 '*:->file' && return 0
             ;;
+        nixos-rebuild)
+            local -a main_commands=(
+                'switch' 'boot' 'test' 'build' 'dry-build'
+                'dry-activate' 'build-vm' 'build-vm-with-bootloader')
+            _parse \
+                '--upgrade' '--install-grub' "--no-build-nix" \
+                '--fast' '--rollback' \
+                '(--profile-name -p)'{--profile-name,-p}':->nix_profile' \
+                ':->main_commands' && return 0
+            case "$state" in
+                main_commands)
+                    COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
+                    return 0
+                    ;;
+            esac
     esac
 
     echo state: $state >> ~/log/nix
@@ -575,7 +590,8 @@ function _nix_legacy () {
           nix-build nix-shell nix-env nix-store \
           nix-channel nix-copy-closure nix-collect-garbage \
           nix-hash nix-collect-garbage nix-instantiate \
-          nix-install-package nix-prefetch-url nix-push
+          nix-install-package nix-prefetch-url nix-push \
+          nixos-rebuild
 
 
 function _nix () {
