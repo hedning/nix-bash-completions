@@ -601,6 +601,11 @@ function _nix_legacy () {
                     ;;
             esac
             ;;
+       nixos-build-vms)
+           _parse '--show-trace' "--no-out-link" \
+                  ':->nix_file' \
+               && return 0
+           ;;
     esac
 
     echo state: $state >> ~/log/nix
@@ -608,6 +613,7 @@ function _nix_legacy () {
     echo opt_args: ${!opt_args[*]} ${opt_args[*]} >> ~/log/nix
     echo >> ~/log/nix
 
+    # Handle completion of different types of arguments
     case "$state" in
         attr_path)
             local defexpr_path=""
@@ -650,7 +656,7 @@ function _nix_legacy () {
           nix-hash nix-collect-garbage nix-instantiate \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
-          nixos-container nixos-generate-config
+          nixos-container nixos-generate-config nixos-build-vms
 
 
 function _nix () {
