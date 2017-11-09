@@ -521,6 +521,15 @@ function _nix_legacy () {
             _parse \
                 '--type:->hash_algo' ':->url' ':->empty' && return 0
             ;;
+        nix-push)
+            _parse \
+                '--dest:->directory' '(--none)--bzip2'\
+                '(--bzip2)--none' '--force' '--link'\
+                '(--manifest-path)--manifest'\
+                '(--manifest)--manifest-path:->file'\
+                '--url-prefix:->url'\
+                '*:->file' && return 0
+            ;;
     esac
 
     echo state: $state >> ~/log/nix
@@ -566,7 +575,7 @@ function _nix_legacy () {
           nix-build nix-shell nix-env nix-store \
           nix-channel nix-copy-closure nix-collect-garbage \
           nix-hash nix-collect-garbage nix-instantiate \
-          nix-install-package nix-prefetch-url
+          nix-install-package nix-prefetch-url nix-push
 
 
 function _nix () {
