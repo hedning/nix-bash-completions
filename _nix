@@ -297,13 +297,15 @@ function _nix_legacy () {
             ;;
         nix-env)
             local -a main_options=(
-                {--install,-i} {--upgrade,-u} {--uninstall,-e} --set-flag {--query,-q} {--switch-profile,-S}
+                {--install,-i} {--upgrade,-u} {--uninstall,-e} --set-flag
+                {--query,-q} {--switch-profile,-S}
                 --list-generations --delete-generations
                 {--switch-generation,-G} --rollback)
             local ex_group="${main_options[*]}"
             ex_group="(${ex_group// /|})"
             local -a main_spec=(
-                "$ex_group"{--install,-i} "$ex_group"{--upgrade,-u} "$ex_group"{--uninstall,-e}
+                "$ex_group"{--install,-i} "$ex_group"{--upgrade,-u}
+                "$ex_group"{--uninstall,-e}
                 "$ex_group"--set-flag":->flag_name:->flag_value"
                 "$ex_group"{--query,-q} "$ex_group"{--switch-profile,-S}
                 "$ex_group"--list-generations
