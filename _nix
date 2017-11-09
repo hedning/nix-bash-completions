@@ -334,11 +334,18 @@ function _nix_legacy () {
                    ${nix_boilerplate_opts} ${main_spec[*]} && return 0
 
             case "$state" in
-                nix-env_path)
+                nix_env_path)
                     local defexpr_path=""
+                    echo file: "${opt_args[-f]}" "${opt_args[--file]}" >> ~/log/nix
                     if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
-                       defexpr_path="import ${realpath $file} {}"
+                        # Assumes you only provide one -f/--file
+                        local file=${opt_args[-f]}${opt_args[--file]}
+                        local abs_path=$(realpath $(_expand_tilde $file) 2>/dev/null)
+                        if [[ -e "$abs_path" ]]; then
+                           defexpr_path="import $abs_path {}"
+                        fi
                     fi
+                    echo defexpr_path: $defexpr_path >> ~/log/nix
                     _nix_attr_paths "$defexpr_path"
                     ;;
                 flag_name)
@@ -446,3 +453,15 @@ function _nix () {
     COMPREPLY=( $(compgen -W "${commands[*]}" ${cur}))
 }
 complete -F _nix nix
+
+_expand_tilde()
+{
+    case "$1" in
+        (\~)        echo "$HOME";;
+        (\~/*)      echo "$HOME/${1#\~/}";;
+        (\~[^/]*/*) local user=$(eval echo ${1%%/*})
+                    echo "$user/${1#*/}";;
+        (\~[^/]*)   eval echo ${1};;
+        (*)         echo "$1";;
+    esac
+}
