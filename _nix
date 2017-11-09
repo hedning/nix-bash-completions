@@ -292,6 +292,13 @@ function _nix_legacy () {
                    ${nix_boilerplate_opts} ${main_spec[*]} && return 0
 
             case "$state" in
+                nix-env_path)
+                    local defexpr_path=""
+                    if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
+                       defexpr_path="import ${realpath file} {}"
+                    fi
+                    _nix_attr_paths "$defexpr_path"
+                    ;;
                 flag_name)
                     local -a _set_flag_attrs=(
                         'priority:Resolve package name conflicts'
