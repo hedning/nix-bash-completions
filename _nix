@@ -402,16 +402,18 @@ function _nix_legacy () {
                             ${nix_dry_run[*]}
                             '--ignore-unknown'
                             '*:->file')
+                        break
                         ;;
                     --gc)
                         command_options=(
                             ${nix_gc_common[*]}
                             '--max-freed:->empty')
+                        break
                         ;;
                     --delete)
                         command_options=('--ignore-liveness')
+                        break
                         ;;
-
                     --query|-*([:alpha:])q*([:alpha:]))
                         local -a queries=(
                             '--outputs' {--requisites,-R} '--references'
@@ -436,22 +438,26 @@ function _nix_legacy () {
                         done
                         command_options=(${query_spec[*]} ${query_common[*]}
                                          {requisite_options[*]} "*:->file")
+                        break
                         ;;
                     --verify)
                         command_options=('--check-contents' '--repair')
+                        break
                         ;;
                     --dump-db|--load-db|--query-failed-paths)
                         # Nothing to complete
+                        break
                         ;;
                     *)
                         command_options=('*:->file')
+                        break
                         ;;
                 esac
             done
 
-            _parse ${main_spec[*]} ${command_options[*]} && return 0
-
-            echo query command options: ${command_options[*]} >> ~/log/nix
+            _parse ${command_options[*]} ${main_spec[*]} && return 0
+            # TODO: Add main_spec completion if there's nothing else to do
+            # probably needs to be done as a more general solution in _parse
     esac
 
     echo state: $state >> ~/log/nix
