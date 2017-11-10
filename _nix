@@ -46,21 +46,21 @@ function _nix_attr_paths () {
 
 
 function _parse () {
-    # Takes in `spec ...` and parses the command line
-
+    # Takes in `spec ...` and parses the command line using it
 
     ## Spec
     # :action -- A regular normal argument
     # *:action -- Repeating normal argument
 
-    ## opt spec
+    ## option spec
     # -o:action
     # [(pattern|pattern|...)][*]-f:action:[*]action
+    # patterns to exclude from completion when option is typed
 
     ## action spec
     # ->string
-    # set $state to string
-    #
+    # set $state to 'string'
+    # _function, function to run (isn't actually used though, so might be buggy)
 
 
     # [*]-f:action:action
