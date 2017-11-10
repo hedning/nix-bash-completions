@@ -750,7 +750,8 @@ function _nix () {
 
     # Extract the commands with descriptions
     # like ('command:some description' 'run:run some stuff')
-    local -a main_commands=(
+    local -a main_commands
+    main_commands=(
         $(nix --help | sed -E \
                            -e '/^Available commands/,/^$/!d' \
                            -e '/^Available commands/d' \
@@ -855,12 +856,12 @@ function _nix () {
             # Extract the lines containing the option descriptions
             # Strip out the human descriptions
             local -a option_descriptions
-            option_descriptions=(
-                $(IFS=$'\n' nix $word --help | sed -E \
-                                                   -e '/^Flags:/,/^$/!d' \
-                                                   -e "/^Flags:/d" \
-                                                   -e 's/.*  //' \
-                                                   -e '/^$/d'))
+            IFS=$'\n' option_descriptions=(
+                $(nix $word --help | sed -E \
+                                         -e '/^Flags:/,/^$/!d' \
+                                         -e "/^Flags:/d" \
+                                         -e 's/(.*)  .*/\1/' \
+                                         -e '/^$/d'))
 
             local option option_spec
             for option_spec in ${option_descriptions[*]}; do
