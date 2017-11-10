@@ -5,7 +5,7 @@ A lot of the boilerplate (options etc.) comes from [nix-zsh-completions](https:/
 
 ## Usage
 
-At that point you can just source the `_nix` file: `. _nix`, and start tabbing.
+Just source the `_nix` file: `. _nix`, and start tabbing.
 
 You need [bash-completion](https://github.com/scop/bash-completion) for it to work (which is the case if most commands already provides completions). On NixOS this is done by setting `programs.bash.enableCompletion`.
 
