@@ -309,7 +309,7 @@ function _nix_legacy () {
                 '--command:->command'
                 '--exclude:->regex'
                 '--pure'
-                '(--packages|-p|shell)'{--packages,-p}':->package_attr_path')
+                '(--packages|-p|shell)'{--packages,-p}':*->package_attr_path')
             _parse '*:->file' ${nix_common_opts[*]} \
                    + boiler \
                    ${nix_boilerplate_opts[*]} \
