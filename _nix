@@ -6,7 +6,6 @@ function print () {
     done
 }
 
-#!/run/current-system/sw/bin/bash
 function _nix_attr_names () {
     # prefix with 'top' as we let 'top = $defexpr' in NIX_FILE, where
     # 'builtins.attrNames $prefixed_path' is being run
@@ -56,7 +55,14 @@ function _parse () {
 
     ## opt spec
     # -o:action
-    # [(pattern|pattern|...)]-f[:*]:action:[*]action
+    # [(pattern|pattern|...)][*]-f:action:[*]action
+
+    ## action spec
+    # ->string
+    # set $state to string
+    #
+
+
     # [*]-f:action:action
     # [n]:action
     # :[*]action
@@ -148,6 +154,7 @@ function _parse () {
                 opt_queue=(${opt_queue[*]:1})
             fi
         elif [[ "$word" == --* ]]; then
+            # Long option
             print "Consume an option: $word ${options["$word"]}"
             completors+=("$word")
             local -a actions=(${options["$word"]//:/ })
@@ -604,9 +611,9 @@ function _nix_legacy () {
                 'switch' 'boot' 'test' 'build' 'dry-build'
                 'dry-activate' 'build-vm' 'build-vm-with-bootloader')
             _parse \
-                '--upgrade' '--install-grub' "--no-build-nix" \
-                '--fast' '--rollback' \
-                '(--profile-name -p)'{--profile-name,-p}':->nix_profile' \
+                '--upgrade' '--install-grub' "--no-build-nix"             \
+                '--fast' '--rollback'                                     \
+                '(--profile-name -p)'{--profile-name,-p}':->nix_profile'  \
                 ':->main_commands' && return 0
             case "$state" in
                 main_commands)
@@ -640,7 +647,8 @@ function _nix_legacy () {
                     create)
                         main_options=(
                             $container_name $container_config '--config-file:->file'
-                            '--system-path:->file' '--ensure-unique-name' '--auto-start')
+                            '--system-path:->file' '--ensure-unique-name'
+                            '--auto-start')
                         break
                         ;;
                     run)
