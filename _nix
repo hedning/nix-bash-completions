@@ -438,24 +438,17 @@ function _nix_legacy () {
                     _nix_attr_paths "$defexpr_path"
                     ;;
                 flag_name)
-                    local -a _set_flag_attrs=(
-                        'priority:Resolve package name conflicts'
-                        'keep:Prevent package from being upgraded'
-                        'active:Package is symlinked to profile'
-                    )
-                    # _describe -t commands "Package flag" _set_flag_attrs
+                    COMPREPLY=($(compgen -W "priority keep active" -- "$cur"))
                     ;;
                 flag_value)
-                    local flag_name=$words[$(($CURRENT - 1))]
+                    local flag_name=$prev
                     case $flag_name in
                         priority)
-                            # __message "Number, lower priority values denote a higher priority"
+                            return 0
                             ;;
-                        keep)
-                            # _values "TF" true false
-                            ;;
-                        active)
-                            # _values "TF" true false
+                        keep|active)
+                            COMPREPLY=($(compgen -W "true false" -- "$cur"))
+                            return 0
                             ;;
                     esac
                     ;;
