@@ -751,7 +751,7 @@ function _nix () {
     local -a common_options
     common_options=("(--debug)"--debug "(-h|--help)"{-h,--help}
                     "(--help-config)"--help-config
-                    "*--builders:->machine" "--store:->STORE-URI"
+                    "*--builders:->machine" "--store:->option-STORE-URI"
                     "*--option:->nixoption:->nixoptionvalue"
                     "(--quiet)--quiet" "*{-v,--verbose}"
                     "(--version)"--version)
