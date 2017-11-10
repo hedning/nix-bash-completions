@@ -11,6 +11,10 @@ You also need [bash-completion](https://github.com/scop/bash-completion) for it 
 
 The script also depends on `sed` being in the path.
 
+## Attribute path completion
+
+Completion of attribute path is context aware, so supplying eg. `-f some/path/` will make `-A ` complete paths in `some/path/default.nix`.
+
 ## Implementation
 
 The script runs on top of `_parser` which is a bare bones implementation of zsh's [`_arguments`](http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Completion-Functions) with some minor modifications to the syntax, and a bunch of stuff not implemented.
