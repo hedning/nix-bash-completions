@@ -11,8 +11,8 @@ You also need [bash-completion](https://github.com/scop/bash-completion) for it 
 
 ## Implementation
 
-The script runs on top of `_parser` which is a bare bones implementation of zsh's `_arguments` with some modifications to the exclusion pattern syntax, and a bunch of stuff not implemented.
+The script runs on top of `_parser` which is a bare bones implementation of zsh's [`_arguments`](http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Completion-Functions) with some modifications to the exclusion pattern syntax, and a bunch of stuff not implemented.
 
 ## Issues
 
-- Only the first short option is completed, but `nix-env -iA` is recognized.
+- Only the first short option is completed, but eg. `nix-env -iA` is recognized. Completing stacked options is probably not easily doable in bash.
