@@ -757,70 +757,6 @@ function _nix () {
                            -e '/^Available commands/d' \
                            -e '/^$/d' \
                            -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
-    print " --***-- statish"
-
-    # function _extract_nix_options {
-    #     local IFS=$'\n'
-    #     local -a nix_options
-    #     nix_options=($(nix --help-config | sed -E \
-    #                                            -e '/^$/,/^$/!d' \
-    #                                            -e '/^$/d' \
-    #                                            -e 's=^ +([0-9a-z-]*) +(.*)$=\1:\2='))
-    #     _describe -t nix_options "Option" nix_options
-    # }
-
-    # function _extract_nix_value_description {
-    #     local OPTION=$words[$(($CURRENT - 1))]
-    #     local description=$(nix --help-config | sed -E \
-    #                                                 -e /\^\ \ ${OPTION}\ /\!d \
-    #                                                 -e "s=^  ${OPTION} +==")
-    #     _message $description
-    # }
-
-    # function _nix_store {
-    #     _alternative \
-    #         'file:Use a chroot store:_directories' \
-    #         'local:Use /nix/store:(local)' \
-    #         'remote:Go via the Nix daemon:(remote)' \
-    #         'https:HTTPS:(https://)' \
-    #         'cache:Local binary cache:(file://)' \
-    #         's3:S3 binary cache:(s3://)' \
-    #         'ssh:Nix store over ssh:(ssh://)' \
-    #         }
-
-    # function _nix_installables_file {
-    #     _alternative \
-    #         file:'Local file':_files \
-    #         'channel:Channel:(channel:
-    #                    channel:nixos-13.10           channel:nixos-16.09
-    #                    channel:nixos-14.04           channel:nixos-16.09-small
-    #                    channel:nixos-14.04-small     channel:nixos-17.03
-    #                    channel:nixos-14.12           channel:nixos-17.03-small
-    #                    channel:nixos-14.12-small     channel:nixos-17.09
-    #                    channel:nixos-15.09           channel:nixos-17.09-small
-    #                    channel:nixos-15.09-small     channel:nixos-unstable
-    #                    channel:nixos-16.03           channel:nixos-unstable-small
-    #                    channel:nixos-16.03-small     channel:nixpkgs-17.09-darwin
-    #                    channel:nixos-16.03-testing   channel:nixpkgs-unstable)' \
-    #                        'url:URL:(https:// http://)'
-    # }
-
-    # # Complete attribute paths and files starting with either "/" or "./"
-    # function _nix_installable {
-    #     # We need to prefix relative paths with ./ so nix will evaluate it as a path
-    #     local prefix='-P ./'
-    #     local current_word=$words[$CURRENT]
-    #     # When referencing an absolute path we can't prefix with ./
-    #     if [[ -z ${current_word:##(/*|\~/*)} && -n $current_word ]]; then
-    #         prefix=""
-    #     fi
-    #     _alternative \
-    #         'path:Attribute path: _nix_attr_paths' \
-    #         "file:File path to package:_files ${prefix}"
-    # }
-
-    print " --***-- middle"
-
     # Add commands to an associative array for easy lookup
     local -A command_lookup
     local main_command
@@ -836,8 +772,7 @@ function _nix () {
     for word in ${words[*]:1}; do
 
         # Check if we're in a valid command
-        print "check $word against main commands"
-        if [[ ${command_lookup[$word]} == 1 ]]; then
+        if [[ "${command_lookup[$word]}" == 1 ]]; then
             # Extract an array describing the possible arguments to the
             # command eg. (NAR PATH) for cat-nar or (INSTALLABLES) for run
             local -a args=(
@@ -876,7 +811,6 @@ function _nix () {
                                              | sed -E \
                                                    -e 's=,= =' \
                                                    -e 's=<.*=='))
-                print "option group:" ${option_group[*]}
                 # Extract any arguments, by stripping the options (and <|>)
                 local -a option_args=(
                     $(echo "$option_spec" | sed -E \
@@ -927,6 +861,14 @@ function _nix () {
             ;;
         option-FILE)
             COMPREPLY=($(compgen -f -- $cur))
+            ;;
+        nixoption)
+            local -a nix_options
+            nix_options=($(nix --help-config | sed -E \
+                                                   -e '/^$/,/^$/!d' \
+                                                   -e '/^$/d' \
+                                                   -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
+            COMPREPLY=($(compgen -W "${nix_options[*]}" -- $cur))
             ;;
         *)
             print "$state not implemented"
