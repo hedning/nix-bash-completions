@@ -531,8 +531,6 @@ function _nix_legacy () {
             done
 
             _parse ${command_options[*]} ${main_spec[*]} && return 0
-            # TODO: Add main_spec completion if there's nothing else to do
-            # probably needs to be done as a more general solution in _parse
             ;;
         nix-channel)
             # nix-channel handling
@@ -564,11 +562,11 @@ function _nix_legacy () {
                 ${nix_dry_run[*]} && return 0
             ;;
         nix-hash)
-            local -a ig=( '--to-base16' '--to-base32' )
+            local ig='--to-base16|--to-base32'
             _parse \
                 '(-*)--to-base16:->hash' \
                 '(-*)--to-base32:->hash' \
-                "(&ig)--flat" \
+                "($ig)--flat" \
                 "($ig)--base32" \
                 "($ig)--truncate" \
                 "($ig)--type:->hash_algo" \
