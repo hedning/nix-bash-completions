@@ -5,7 +5,7 @@ A lot of the boilerplate (options etc.) comes from [nix-zsh-completions](https:/
 
 ## Usage
 
-At the moment the script requires `extglob` to be set, eg. `shopt -s extglob`. At that point you can just source the `_nix` file: `. _nix`, and start tabbing.
+At the moment the script requires `extglob` to be set in the executing shell, eg. `shopt -s extglob`. At that point you can just source the `_nix` file: `. _nix`, and start tabbing.
 
 You also need [bash-completion](https://github.com/scop/bash-completion) for it work (which is the case if most commands already provides completions).
 
@@ -13,7 +13,7 @@ The script also depends on `sed` being in the path.
 
 ## Attribute path completion
 
-Completion of attribute path is context aware, so supplying eg. `-f some/path/` will make `-A ` complete paths in `some/path/default.nix`.
+Completion of attribute paths is context aware, so supplying eg. `-f some/path/` will make `-A ` complete paths in `some/path/default.nix`, and will pick up `default.nix` or `shell.nix` in the current directory for `nix-build` and `nix-shell`.
 
 ## Implementation
 
