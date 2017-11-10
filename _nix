@@ -875,7 +875,7 @@ function _nix () {
                 local -a option_group=($(echo "$option_spec" \
                                              | sed -E \
                                                    -e 's=,= =' \
-                                                   -e 's=<.*|=='))
+                                                   -e 's=<.*=='))
                 print "option group:" ${option_group[*]}
                 # Extract any arguments, by stripping the options (and <|>)
                 local -a option_args=(
@@ -922,6 +922,11 @@ function _nix () {
             COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
             return 0
             ;;
+        FILE)
+            COMPREPLY=($(compgen -f $cur))
+            ;;
+        *)
+            print "$state not implemented"
     esac
 }
 complete -F _nix nix
