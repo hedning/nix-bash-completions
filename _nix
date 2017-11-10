@@ -91,7 +91,7 @@ function _parse () {
                 # exclude the option from itself by default
                 local -a split=(${spec/:/ })
                 local flag=${split[0]}
-                excludes=${flag}${excludes:+\|$excludes}${excludes:-\#}
+                excludes=${flag}${excludes:+\|}${excludes:-\#}
                 ;&
             \*-*)
                 # Split on first :
