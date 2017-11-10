@@ -160,23 +160,28 @@ function _parse () {
             fi
         elif [[ "$word" == -* ]]; then
             # Short option, possibly stacked
-            print "Consume an option: $word ${options["$word"]}"
+            print "Consume short options: $word ${options["$word"]}"
+            local flags=${word#-}
             completors+=("$word")
-            local -a actions=(${options["$word"]//:/ })
-            # Check if actions contains an exclusion pattern
-            if [[ ${actions[0]} == *\# ]]; then
-                local prefix="${excluded_options:+|}"
-                excluded_options+="$prefix${actions[0]:0:-1}"
-                print "$word's exclusion group:" "$prefix${actions[0]:0:-1}" 
-                actions=(${actions[*]:1})
-            fi
-            if [[ "${actions[*]}" ]]; then
-                current_option="$word"
-                # Add to the option argument queue
-                print  "option arguments: ${actions[*]}"
-                opt_queue=(${actions[*]})
-                print  "option queue: ${opt_queue[*]}"
-            fi
+            while [[ "$flags" ]]; do
+                local flag="-${flags:0:1}"
+                local -a actions=(${options["$flag"]//:/ })
+                # Check if actions contains an exclusion pattern
+                if [[ ${actions[0]} == *\# ]]; then
+                    local prefix="${excluded_options:+|}"
+                    excluded_options+="$prefix${actions[0]:0:-1}"
+                    print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}" 
+                    actions=(${actions[*]:1})
+                fi
+                if [[ "${actions[*]}" ]]; then
+                    current_option="$flag"
+                    # Add to the option argument queue
+                    print  "option arguments: ${actions[*]}"
+                    opt_queue=(${actions[*]})
+                    print  "option queue: ${opt_queue[*]}"
+                fi
+                flags="${flags:1}"
+            done
         else
             # Consume a regular argument
             print  "Consume a regular argument: $word"
