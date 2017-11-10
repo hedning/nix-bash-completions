@@ -845,15 +845,63 @@ function _nix () {
 
     print "command arguments: "
 
-    _parse \
-               ':->main_command' \
-               ${command_arguments[*]} \
-               ${common_options[*]} \
-               ${command_options[*]} && return 0
+    _parse ':->main_command' \
+           ${command_arguments[*]} \
+           ${common_options[*]} \
+           ${command_options[*]} && return 0
 
+    # Handle argument completion based on the resulting state
     case "$state" in
         main_command)
             COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
+            return 0
+            ;;
+        arg-@(INSTALLABLES|INSTALLABLE|PACKAGE|DEPENDENCY))
+
+            if [[ "$cur" == @("./"*|/*|\~*) ]]; then
+                # Complete files and return if we're entering files with
+                # absolute file syntax that nix will understand
+                COMPREPLY=($(compgen -f -- $cur))
+                return 0
+            fi
+
+            local defexpr=""
+            if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
+                # Assumes you only provide one -f/--file
+                local file=${opt_args[-f]}${opt_args[--file]}
+                local abs_path=$(realpath $(_expand_tilde $file) 2>/dev/null)
+                if [[ -e "$abs_path" ]]; then
+                    defexpr="import $abs_path {}"
+                fi
+            else
+                # Fall back to completing available channels in the NIX_PATH
+
+                # Extract the channels from NIX_PATH and -I/--include
+                local -a channels=(${NIX_PATH[*]//:/ })
+                # Add -I/--include afterwards, so they will shadow the NIX_PATH
+                channels+=(${opt_args[-I]//:/ })
+                channels+=(${opt_args[--include]//:/ })
+
+                local -A path_map
+                local channel name nix_path
+                for channel in ${channels[*]}; do
+                    name=${channel%%=*}
+                    nix_path=${channel#*=}
+                    if [[ "$name" != "$channel" ]]; then
+                        # Only add paths with a name, not sure how they work
+                        path_map[$name]=$nix_path
+                    fi
+                done
+
+                defexpr=$'{ '
+                for name in ${!path_map[*]}; do
+                    # nixos-config isn't useful or possible to complete
+                    [[ "$name" == nixos-config ]] && continue
+                    defexpr+="$name = import ${path_map[$name]} {}; "
+                done
+                defexpr+=' }'
+            fi
+            _nix_attr_paths "$defexpr"
             return 0
             ;;
         option-COMMAND)
