@@ -242,6 +242,10 @@ function _parse () {
             print $("$completor")
             return 0
             ;;
+        "")
+            COMPREPLY=($(compgen -W "${!options[*]}" -X "*($excluded_options)" -- "$cur"))
+            return 0
+            ;;
     esac
 }
 
