@@ -922,8 +922,11 @@ function _nix () {
             COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
             return 0
             ;;
+        COMMAND)
+            COMPREPLY=($(compgen -c -- $cur))
+            ;;
         FILE)
-            COMPREPLY=($(compgen -f $cur))
+            COMPREPLY=($(compgen -f -- $cur))
             ;;
         *)
             print "$state not implemented"
