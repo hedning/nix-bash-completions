@@ -904,11 +904,42 @@ function _nix () {
             _nix_attr_paths "$defexpr"
             return 0
             ;;
+        arg-@(PATH|PATHS|FILES|NAR))
+            COMPREPLY=($(compgen -f -- $cur))
+            return
+            ;;
+        arg-REGEX)
+            return
+            ;;
+        arg-STRINGS)
+            return
+            ;;
+        option-NAME)
+            return
+            ;;
+        option-EXPR)
+            return
+            ;;
+        option-STRING)
+            return
+            ;;
+        option-STORE-URI)
+            ## Not sure how to present alternatives here
+            COMPREPLY=($(compgen -d -- $cur))
+            return
+            ;;
         option-COMMAND)
             COMPREPLY=($(compgen -c -- $cur))
             ;;
-        option-FILE)
+        option-@(FILE|FILES))
             COMPREPLY=($(compgen -f -- $cur))
+            ;;
+        option-TYPE)
+            COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
+            return
+            ;;
+        option-PATH)
+            return
             ;;
         nixoption)
             local -a nix_options
