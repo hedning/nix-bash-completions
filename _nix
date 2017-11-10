@@ -697,10 +697,10 @@ function _nix_legacy () {
             local defexpr_path=""
             if [[ ${line[1]} ]]; then
                 defexpr_path="import ${line[1]} {}"
-            elif [[ -e shell.nix && $command_name == nix-shell ]]; then
-                defexpr_path=shell.nix
+            elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
+                defexpr_path="import $(realpath shell.nix) {}"
             elif [[ -e default.nix ]]; then
-                defexpr_path=default.nix
+                defexpr_path="import $(realpath default.nix) {}"
             fi
             print  "defexpr: $defexpr_path" 
             _nix_attr_paths "$defexpr_path"
