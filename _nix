@@ -849,7 +849,7 @@ function _nix () {
                ':->main_command' \
                ${command_arguments[*]} \
                ${common_options[*]} \
-               ${command_options[*]}
+               ${command_options[*]} && return 0
 
     case "$state" in
         main_command)
