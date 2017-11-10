@@ -275,7 +275,7 @@ function _nix_legacy () {
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
             ${nix_search_path_args}
-            {--attr,-A}':->attr_path' {--expr,-E}
+            "*"{--attr,-A}':->attr_path' {--expr,-E}
             '--arg:->empty:->empty' '--argstr:->empty:->empty'
             '--max-silent-time:->empty'
             '--timeout:->empty'
@@ -309,6 +309,8 @@ function _nix_legacy () {
                 '--command:->command'
                 '--exclude:->regex'
                 '--pure'
+                # nix-shell only takes one -A, so override the default
+                "(--attr|-A)"{--attr,-A}':->attr_path'
                 '(--packages|-p|shell)'{--packages,-p}':*->package_attr_path')
             _parse '*:->file' ${nix_common_opts[*]} \
                    + boiler \
@@ -400,7 +402,7 @@ function _nix_legacy () {
                 esac
             done
 
-            _parse ${command_options[*]} ${nix_env_common_opts[*]} \
+            _parse ${nix_env_common_opts[*]} ${command_options[*]} \
                    ${nix_boilerplate_opts} ${main_spec[*]} && return 0
 
             case "$state" in
