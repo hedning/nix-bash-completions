@@ -847,10 +847,10 @@ function _nix () {
                                          -e 's=\.|\?|<|>==g'))
             # And add the corresponding completors
             local arg
-            for arg in $args; do
+            for arg in ${args[*]}; do
                 local plural=""
                 [[ "$arg" == *S ]] && plural="*"
-                command_arguments+=("$plural:->$arg")
+                command_arguments+=("${plural}:->arg-$arg")
             done
 
             # Extract the lines containing the option descriptions
@@ -887,7 +887,7 @@ function _nix () {
                 for arg in ${option_args[*]}; do
                     local plural=""
                     [[ "$arg" == *S ]] && plural="*"
-                    ACTIONS+=":$plural->$arg"
+                    ACTIONS+=":${plural}->option-$arg"
                 done
 
                 for option in ${option_group[*]}; do
@@ -922,10 +922,10 @@ function _nix () {
             COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
             return 0
             ;;
-        COMMAND)
+        option-COMMAND)
             COMPREPLY=($(compgen -c -- $cur))
             ;;
-        FILE)
+        option-FILE)
             COMPREPLY=($(compgen -f -- $cur))
             ;;
         *)
