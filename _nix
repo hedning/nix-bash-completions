@@ -553,7 +553,7 @@ function _nix_legacy () {
             _parse \
                 '(--from)--to' '(--to)--from' '--sign' '--gzip' \
                 '--include-outputs' '(--use-substitutes -s)'{--use-substitutes,-s} \
-                ':->user_at_host' ':->file' && return 0
+                ':->user_at_host' '*:->file' && return 0
             ;;
         nix-collect-garbage)
             _parse \
