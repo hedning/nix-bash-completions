@@ -92,7 +92,6 @@ function _parse () {
                 local -a split=(${spec/:/ })
                 local flag=${split[0]}
                 excludes=${flag}${excludes:+\|$excludes}${excludes:-\#}
-                print "exclude $flag from itself: $excludes"
                 ;&
             \*-*)
                 # Split on first :
@@ -825,7 +824,7 @@ function _nix () {
     # Add commands to an associative array for easy lookup
     local -A command_lookup
     local main_command
-    for main_command in $main_commands; do
+    for main_command in ${main_commands[*]}; do
         command_lookup[$main_command]=1
     done
 
@@ -834,10 +833,11 @@ function _nix () {
     # Setup the correct command_arguments and command_options depending on which
     # command we've typed
     local word
-    for word in $words; do
+    for word in ${words[*]:1}; do
 
         # Check if we're in a valid command
-        if [[ $command_lookup[$word] == 1 ]]; then
+        print "check $word against main commands"
+        if [[ ${command_lookup[$word]} == 1 ]]; then
             # Extract an array describing the possible arguments to the
             # command eg. (NAR PATH) for cat-nar or (INSTALLABLES) for run
             local -a args=(
@@ -863,9 +863,8 @@ function _nix () {
                                                    -e 's/.*  //'
                                                    -e '/^$/d'))
 
-            local option_description
-            local option
-            for option_spec in $option_descriptions; do
+            local option option_spec
+            for option_spec in ${option_descriptions[*]}; do
 
                 # Extract the options by stripping everything starting at '<'
                 # (and ',')
