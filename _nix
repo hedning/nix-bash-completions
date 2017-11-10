@@ -860,7 +860,7 @@ function _nix () {
                 $(IFS=$'\n' nix $word --help | sed -E \
                                                    -e '/^Flags:/,/^$/!d' \
                                                    -e "/^Flags:/d" \
-                                                   -e 's/.*  //'
+                                                   -e 's/.*  //' \
                                                    -e '/^$/d'))
 
             local option option_spec
