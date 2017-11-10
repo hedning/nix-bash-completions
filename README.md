@@ -5,7 +5,7 @@ A lot of the boilerplate (options etc.) comes from [nix-zsh-completions](https:/
 
 ## Usage
 
-Just source the `_nix` file: `. _nix`, and start tabbing.
+At the moment the script requires `extglob` to be set, eg. `shopt -s extglob`. At that point you can just source the `_nix` file: `. _nix`, and start tabbing.
 
 You also need [bash-completion](https://github.com/scop/bash-completion) for it work (which is the case if most commands already provides completions).
 
