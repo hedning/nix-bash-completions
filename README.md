@@ -15,5 +15,4 @@ The script runs on top of `_parser` which is a bare bones implementation of zsh'
 
 ## Issues
 
-- Option exclusion isn't fully implemented, so some options will complete even when they're already entered on the command line. The plan is to implement default self exclusion and add `*` to repeatable options.
 - Only the first short option is completed, but `nix-env -iA` is recognized.

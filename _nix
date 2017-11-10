@@ -88,7 +88,15 @@ function _parse () {
                 cur_group="$1"
             ;;
             -*)
+                # exclude the option from itself by default
+                local -a split=(${spec/:/ })
+                local flag=${split[0]}
+                excludes=${flag}${excludes:+\|$excludes}${excludes:-\#}
+                print "exclude $flag from itself: $excludes"
+                ;&
+            \*-*)
                 # Split on first :
+                spec="${spec#\*}" # Strip possible star prefix
                 local -a split=(${spec/:/ })
                 local flag=${split[0]}
                 if [[ "$cur_group" ]]; then
