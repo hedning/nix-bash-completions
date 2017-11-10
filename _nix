@@ -856,11 +856,12 @@ function _nix () {
             # Extract the lines containing the option descriptions
             # Strip out the human descriptions
             local -a option_descriptions
-            IFS=$'\n' option_descriptions=(
+            option_descriptions=(
                 $(nix $word --help | sed -E \
                                          -e '/^Flags:/,/^$/!d' \
                                          -e "/^Flags:/d" \
                                          -e 's/(.*)  .*/\1/' \
+                                         -e 's/ //g' \
                                          -e '/^$/d'))
 
             local option option_spec
@@ -868,13 +869,19 @@ function _nix () {
 
                 # Extract the options by stripping everything starting at '<'
                 # (and ',')
-                local flags=${option_spec##<*/}
-                local -a option_group=(${flags/,/})
+                # local flags="${option_spec##<*/}"
+                # local -a option_group=(${flags/,/ })
+
+                local -a option_group=($(echo "$option_spec" \
+                                             | sed -E \
+                                                   -e 's=,= =' \
+                                                   -e 's=<.*|=='))
+                print "option group:" ${option_group[*]}
                 # Extract any arguments, by stripping the options (and <|>)
                 local -a option_args=(
-                    $(echo -- $option_spec | sed -E \
-                                                  -e 's=^[^<]+<==' \
-                                                  -e 's=<|>==g'))
+                    $(echo "$option_spec" | sed -E \
+                                                -e 's=[^<]*<==' \
+                                                -e 's=<|>= =g'))
 
                 local ACTIONS=""
                 for arg in ${option_args[*]}; do
@@ -892,7 +899,8 @@ function _nix () {
                         command_options+=("*${option}"$ACTIONS)
                     else
                         # Default to mutually exclusive non-repeatable options
-                        command_options+=("(${option_group[*]/ /|})"$option$ACTIONS)
+                        local exclusions="${option_group[*]}"
+                        command_options+=("(${exclusions// /|})"$option$ACTIONS)
                     fi
                 done
             done
