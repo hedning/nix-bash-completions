@@ -574,7 +574,7 @@ function _nix_legacy () {
             _parse \
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_opts[*]} '--xml' '--json' '--add-root' \
-                '--indirect' '--parse' '--eval' "--find-file:*:->file"\
+                '--indirect' '--parse' '--eval' "--find-file:*->file"\
                 '--strict' '--read-write-mode' '*:->file' && return 0
             ;;
         nix-install-package)
