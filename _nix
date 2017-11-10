@@ -751,8 +751,7 @@ function _nix () {
     # Extract the commands with descriptions
     # like ('command:some description' 'run:run some stuff')
     local -a main_commands=(
-        $(IFS=$'\n'
-          nix --help | sed -E \
+        $(nix --help | sed -E \
                            -e '/^Available commands/,/^$/!d' \
                            -e '/^Available commands/d' \
                            -e '/^$/d' \
@@ -877,13 +876,13 @@ function _nix () {
                                                   -e 's=<|>==g'))
 
                 local ACTIONS=""
-                for arg in $option_args; do
+                for arg in ${option_args[*]}; do
                     local plural=""
                     [[ "$arg" == *S ]] && plural="*"
                     ACTIONS+=":$plural->$arg"
                 done
 
-                for option in $option_group; do
+                for option in ${option_group[*]}; do
                     # Handle `run --keep/--unset` manually as they can be repeated
                     if [[ "$word" == run && "$option" == @(-k|--keep|-u|--unset) ]]; then
                         command_options+=("*${option}:->PARAMS")
