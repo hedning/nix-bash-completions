@@ -443,6 +443,12 @@ function _nix_legacy () {
                     print  "defexpr_path: $defexpr_path"
                     _nix_attr_paths "$defexpr_path"
                     ;;
+                installed_packages)
+                    local -a packages=($(nix-env -q))
+                    packages=(${packages[*]%%-[0-9]*})
+                    COMPREPLY=($(compgen -W "${packages[*]}" -- "$cur"))
+                    return
+                    ;;
                 flag_name)
                     COMPREPLY=($(compgen -W "priority keep active" -- "$cur"))
                     ;;
