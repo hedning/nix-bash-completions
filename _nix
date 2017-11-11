@@ -298,6 +298,8 @@ function _nix_legacy () {
     local state context
     local -a line
     local -A opt_args
+
+    local -a main_commands=()
     case "${words[0]}" in
         nix-build)
             local -a nix_build_opts=(
@@ -604,20 +606,14 @@ function _nix_legacy () {
                 '*:->file' && return 0
             ;;
         nixos-rebuild)
-            local -a main_commands=(
+            main_commands=(
                 'switch' 'boot' 'test' 'build' 'dry-build'
                 'dry-activate' 'build-vm' 'build-vm-with-bootloader')
             _parse \
                 '--upgrade' '--install-grub' "--no-build-nix"             \
                 '--fast' '--rollback'                                     \
                 '(--profile-name -p)'{--profile-name,-p}':->nix_profile'  \
-                ':->main_commands' && return 0
-            case "$state" in
-                main_commands)
-                    COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
-                    return 0
-                    ;;
-            esac
+                ':->main_command' && return 0
             ;;
         nixos-install)
             _parse \
@@ -632,7 +628,7 @@ function _nix_legacy () {
             _parse '(-*)'{--hash,--revision} && return 0
             ;;
         nixos-container)
-            local -a main_commands=(
+            main_commands=(
                 'list' 'create' 'destroy' 'start' 'stop' 'status' 'update'
                 'login' 'root-login' 'run' 'show-ip' 'show-host-key')
 
@@ -662,12 +658,8 @@ function _nix_legacy () {
                         ;;
                 esac
             done
-            _parse '--help' ':->main_commands' ${main_options[*]} && return 0
+            _parse '--help' ':->main_command' ${main_options[*]} && return 0
             case "$state" in
-                main_commands)
-                    COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
-                    return 0
-                    ;;
                 container)
                     local -a containers=($(nixos-container list))
                     COMPREPLY=($(compgen -W "${containers[*]}" -- "$cur"))
@@ -682,7 +674,7 @@ function _nix_legacy () {
            ;;
 
        nixops)
-           local -a main_commands=(
+           main_commands=(
                list create modify clone delete info check set-args deploy
                send-keys destroy stop start reboot show-physical ssh
                ssh-for-each scp rename backup backup-status remove-backup
@@ -799,12 +791,6 @@ function _nix_legacy () {
            _parse ':->main_command' \
                   ${main_options[*]} \
                   ${nix_boilerplate_opts[*]} && return 0
-
-           case "$state" in
-               main_command)
-                   COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
-                   return
-           esac
            ;;
     esac
 
@@ -814,6 +800,10 @@ function _nix_legacy () {
 
     # Handle completion of different types of arguments
     case "$state" in
+        main_command)
+            COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
+            return
+            ;;
         attr_path)
             local defexpr_path=""
             if [[ ${line[1]} ]]; then
