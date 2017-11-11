@@ -295,7 +295,7 @@ function _nix_legacy () {
             '(-|--print*|--delete)--delete'
             )
 
-    local state context
+    local state context word opt
     local -a line
     local -A opt_args
 
