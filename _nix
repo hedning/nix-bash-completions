@@ -109,7 +109,6 @@ function _parse () {
                 options[$flag]="$excludes:${split[1]}"
                 ;;
             :*|\*:*)
- #              echo Adding argument $spec
                 arguments+=("$spec")
                 ;;
         esac
@@ -118,7 +117,7 @@ function _parse () {
     done
     print  "    --**--" "-- Finished parsing spec"
     print  "arguments:" "${arguments[*]}"
-    print "options" "${!options[*]}" >> ~/log/nix
+    print "options" "${!options[*]}"
     # print  groups: ${!groups[*]} ${groups[*]} 
 
 
