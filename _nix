@@ -680,6 +680,132 @@ function _nix_legacy () {
                   ':->nix_file' \
                && return 0
            ;;
+
+       nixops)
+           local -a main_commands=(
+               list create modify clone delete info check set-args deploy
+               send-keys destroy stop start reboot show-physical ssh
+               ssh-for-each scp rename backup backup-status remove-backup
+               clean-backups restore show-option list-generations rollback
+               delete-generation show-console-output dump-nix-paths export
+               import edit)
+
+           # Options valid for every command
+           local -a nixops_common_arguments=(
+               '(--state|-s)'{--state,-s}':->file'
+               '(--deployment|-d)'{--deployment,-d}'[UUID or symbolic name of deployment on which to operate]'
+               '--confirm' '--debug')
+           local -a nixops_include_exclude=(
+               '--include:_known_hosts' '--exclude:_known_hosts')
+           local -a nixops_search_path_args=('-I:->directory')
+
+
+           local -a command_options=()
+           for word in ${words[*]:1}; do
+               case "$word" in
+                   create)
+                       main_options=(
+                           ${nixops_search_path_args[*]}
+                           '*:->nix_file')
+                       break
+                       ;;
+                   modify)
+                       main_options=(
+                           ${nixops_search_path_args[*]}
+                           '(--name|-n)'{--name,-n}':->empty')
+                       break
+                       ;;
+                   clone)
+                       main_options=('(--name|-n)'{--name,-n}':->empty')
+                       break
+                       ;;
+                   delete)
+                       main_options=('--all' '--force')
+                       break
+                       ;;
+                   deploy)
+                       main_options=(
+                           '(--kill-obsolete|-k)'{--kill-obsolete,-k}
+                           ${nix_dry_run[*]} ${nix_repair[*]}
+                           '--create-only' '--build-only' '--copy-only' '--check'
+                           '--allow-reboot' '--force-reboot' '--allow-recreate'
+                           ${nixops_include_exclude[*]}
+                           ${nixops_search_path_args[*]}
+                           '--max-concurrent-copy:->number')
+                       break
+                       ;;
+                   destroy)
+                       main_options=(
+                           '--all'
+                           ${nixops_include_exclude[*]})
+                       break
+                       ;;
+                   stop|start|backp)
+                       main_options=(${nixops_include_exclude[*]})
+                       break
+                       ;;
+                   info)
+                       main_options=('--all' '--plain' '--no-eval')
+                       break
+                       ;;
+                   check|ssh)
+                       break
+                       ;;
+                   ssh-for-each)
+                       main_options=(
+                           '(--parallel|-p)'{--parallel,-p}
+                           ${nixops_include_exclude[*]})
+                       break
+                       ;;
+                   reboot)
+                       main_options=(
+                           ${nixops_include_exclude[*]} '--no-wait')
+                       break
+                       ;;
+                   restore)
+                       main_options=(
+                           ${nixops_include_exclude[*]}
+                           '--devices:->device_name'
+                           '--backup-id:->backup_id')
+                       break
+                       ;;
+                   show-option)
+                       main_options=(
+                           '--xml' ':_known_hosts' ':->nixops_option')
+                       break
+                       ;;
+                   set-args)
+                       main_options=(
+                           '--arg:->arg_name:->arg_value'
+                           '--argstring:->arg_name:->arg_value'
+                           '--unset:->empty')
+                       break
+                       ;;
+                   show-console-output)
+                       main_options=(':_known_hosts')
+                       break
+                       ;;
+                   export)
+                       break
+                       ;;
+                   import)
+                       main_options=(
+                           '--include-keys')
+                       break
+                       ;;
+               esac
+           done
+
+           _parse ':->main_command' \
+                  ${main_options[*]} \
+                  ${nix_boilerplate_opts[*]} && return 0
+
+           case "$state" in
+               main_command)
+                   COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
+                   return
+           esac
+           ;;
     esac
 
     print  "state: $state"
@@ -729,7 +855,8 @@ function _nix_legacy () {
           nix-hash nix-collect-garbage nix-instantiate \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
-          nixos-container nixos-generate-config nixos-build-vms
+          nixos-container nixos-generate-config nixos-build-vms \
+          nixops
 
 
 # nix-1.12 nix command
