@@ -300,6 +300,18 @@ function _nix_legacy () {
     local -a line
     local -A opt_args
 
+    # Handle the different nix* commands
+    #
+    # The basic idea is making a spec to pass to _parse then
+    # handle any possibly argument completion based on the resulting $state.
+    #
+    # For some commands like nix-env the spec depends on the flags already
+    # typed on the command line.
+    #
+    # So in general there's three phases:
+    # 1. Create the spec, possibly checking for existing flags and commands
+    # 2. Pass the spec to parse and let it do its job
+    # 3. Generating completions based on the resulting $state
     local -a main_commands=()
     case "${words[0]}" in
         nix-build)
