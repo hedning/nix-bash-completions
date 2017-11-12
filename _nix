@@ -445,8 +445,16 @@ function _nix_legacy () {
                     COMPREPLY=($(compgen -W "${packages[*]}" -- "$cur"))
                     return
                     ;;
+                nix_generation)
+                    local -a generations=($(nix-env --list-generations | \
+                          sed -E \
+                              -e 's=  ([0-9]+)  .*=\1='))
+                    COMPREPLY=($(compgen -W "${generations[*]}" -- "$cur"))
+                    return
+                    ;;
                 flag_name)
                     COMPREPLY=($(compgen -W "priority keep active" -- "$cur"))
+                    return
                     ;;
                 flag_value)
                     local flag_name=$prev
