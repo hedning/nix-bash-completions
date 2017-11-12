@@ -134,7 +134,8 @@ function _parse () {
 
     local word=""
     opt_args=()
-    for word in ${words[*]} ""; do
+    for i in $(seq 0 ${#words[*]}); do
+        word=${words[$i]}
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
             print "consume option queue: $word ${opt_queue[0]}"
@@ -157,7 +158,8 @@ function _parse () {
             # Check if actions contains an exclusion pattern
             if [[ ${actions[0]} == *\# ]]; then
                 local prefix="${excluded_options:+|}"
-                excluded_options+="$prefix${actions[0]:0:-1}"
+                [[ "$cword" != "$i" ]] \
+                    && excluded_options+="$prefix${actions[0]:0:-1}"
                 print "$word's exclusion group:" "$prefix${actions[0]:0:-1}"
                 actions=(${actions[*]:1})
             fi
