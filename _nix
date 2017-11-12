@@ -353,12 +353,22 @@ function _nix_legacy () {
             for word in ${words[*]:1}; do
                 case "$word" in
                 --install|-*([a-zA-Z])i*([a-zA-Z]))
+                    local norm_arg='*:->installed_packages'
+                    # Check if -A is supplied on command line
+                    for word in ${words[*]:1}; do
+                        case $word in
+                            --attr|-*([a-zA-Z])A*([a-zA-Z]))
+                                norm_arg='*:->attr_path'
+                                ;;
+                        esac
+                    done
                     command_options=(
                         ${nix_env_b[*]} $nix_env_from_profile
                         '(--preserve-installed|-P)'{--preserve-installed,-P}
                         '(--remove-all|-r)'{--remove-all,-r}
                         '(-A|--attr)'{-A,--attr}
-                        '*:->nix_env_path')
+                        "$norm_arg")
+
                     break
                     ;;
                 --upgrade|-*([a-zA-Z])u*([a-zA-Z]))
@@ -410,37 +420,6 @@ function _nix_legacy () {
                    ${nix_boilerplate_opts} ${main_spec[*]} && return 0
 
             case "$state" in
-                nix_env_path)
-                    # Workaround:
-                    # opt_args doesn't contain empty options
-                    # so can't detect stacked options like '-iA'
-                    local expect_attr_paths=false
-                    for word in ${words[*]:1}; do
-                        case $word in
-                            --attr|-*([a-zA-Z])A*([a-zA-Z]))
-                                expect_attr_paths=true
-                            ;;
-                        esac
-                    done
-                    if [[ "$expect_attr_paths" == "false" ]]; then
-                        # Don't try to complete names if -A isn't present
-                        return 0
-                    fi
-
-                    local defexpr_path=""
-                    if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
-                        # Assumes you only provide one -f/--file
-                        local file=${opt_args[-f]}${opt_args[--file]}
-                        local abs_path=$(realpath $(_expand_tilde $file) 2>/dev/null)
-                        if [[ -e "$abs_path" ]]; then
-                           defexpr_path="import $abs_path {}"
-                        fi
-                    else
-                        defexpr_path=$(_nix_gen_defexpr ~/.nix-defexpr)
-                    fi
-                    print  "defexpr_path: $defexpr_path"
-                    _nix_attr_paths "$defexpr_path"
-                    ;;
                 installed_packages)
                     local -a packages=($(nix-env -q))
                     packages=(${packages[*]%%-[0-9]*})
@@ -820,7 +799,21 @@ function _nix_legacy () {
             ;;
         attr_path)
             local defexpr_path=""
-            if [[ ${line[1]} ]]; then
+            if [[ ${words[0]} == nix-env ]]; then
+                if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
+                    # Assumes you only provide one -f/--file
+                    local file=${opt_args[-f]}${opt_args[--file]}
+                    # dequote
+                    file="$(dequote $file)"
+                    __expand_tilde_by_ref file
+                    if [[ -e "$file" ]]; then
+                        file=$(realpath "$file" 2>/dev/null)
+                    fi
+                    defexpr_path="import $file {}"
+                else
+                    defexpr_path=$(_nix_gen_defexpr ~/.nix-defexpr)
+                fi
+            elif [[ ${line[1]} ]]; then
                 local file="$(dequote ${line[1]})"
                 defexpr_path="import $file {}"
             elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
@@ -1006,10 +999,12 @@ function _nix () {
             if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
                 # Assumes you only provide one -f/--file
                 local file=${opt_args[-f]}${opt_args[--file]}
-                local abs_path=$(realpath $(_expand_tilde $file) 2>/dev/null)
-                if [[ -e "$abs_path" ]]; then
-                    defexpr="import $abs_path {}"
+                file="$(dequote $file)"
+                __expand_tilde_by_ref file
+                if [[ -e "$file" ]]; then
+                    file=$(realpath "$file" 2>/dev/null)
                 fi
+                defexpr="import $file {}"
             else
                 # Fall back to completing available channels in the NIX_PATH
 
@@ -1116,16 +1111,4 @@ _nix_gen_defexpr () {
     nix_expr+="}"
 
     echo $nix_expr
-}
-
-_expand_tilde()
-{
-    case "$1" in
-        (\~)        echo "$HOME";;
-        (\~/*)      echo "$HOME/${1#\~/}";;
-        (\~[^/]*/*) local user=$(eval echo ${1%%/*})
-                    echo "$user/${1#*/}";;
-        (\~[^/]*)   eval echo ${1};;
-        (*)         echo "$1";;
-    esac
 }
