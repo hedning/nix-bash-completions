@@ -547,7 +547,9 @@ function _nix_legacy () {
 
             case "$state" in
                 nix_channels)
-                    channels=($(nix-channel --list))
+                    channels=($(nix-channel --list \
+                                    | sed -E \
+                                          -e 's/ .*//'))
                     COMPREPLY=($(compgen -W "${channels[*]}" -- "$cur"))
                     return 0
                     ;;
