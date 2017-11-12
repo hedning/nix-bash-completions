@@ -266,9 +266,11 @@ function _nix_legacy () {
 
     # Misc Nix options accepted by nixos-rebuild
     local -a nix_common_nixos_rebuild=(
-        {--verbose,-v} {--no-build-output,-Q}
-        {--max-jobs,-j}':->empty' '--cores'
-        '(--keep-going|-k)'{--keep-going,-k} {--keep-failed,-K}
+        '(--verbose|-v)'{--verbose,-v}
+        '(--no-build-output|-Q)'{--no-build-output,-Q}
+        '(--max-jobs|-j)'{--max-jobs,-j}':->empty' '--cores'
+        '(--keep-going|-k)'{--keep-going,-k}
+        '(--keep-failed|-K)'{--keep-failed,-K}
         '--fallback' '--show-trace'
         '--option:->nixoption:->nixoptionvalue'
         ${nix_repair})
@@ -277,7 +279,7 @@ function _nix_legacy () {
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
             ${nix_search_path_args}
-            "*"{--attr,-A}':->attr_path' {--expr,-E}
+            '(--attr|-A)*'{--attr,-A}':->attr_path' '(--expr|-E)'{--expr,-E}
             '--arg:->empty:->empty' '--argstr:->empty:->empty'
             '--max-silent-time:->empty'
             '--timeout:->empty'
@@ -613,7 +615,7 @@ function _nix_legacy () {
             _parse \
                 '--upgrade' '--install-grub' "--no-build-nix"             \
                 '--fast' '--rollback'                                     \
-                '(--profile-name -p)'{--profile-name,-p}':->nix_profile'  \
+                '(--profile-name|-p)'{--profile-name,-p}':->nix_profile'  \
                 ':->main_command' && return 0
             ;;
         nixos-install)
