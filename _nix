@@ -821,7 +821,8 @@ function _nix_legacy () {
         attr_path)
             local defexpr_path=""
             if [[ ${line[1]} ]]; then
-                defexpr_path="import ${line[1]} {}"
+                local file="$(dequote ${line[1]})"
+                defexpr_path="import $file {}"
             elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
                 defexpr_path="import $(realpath shell.nix) {}"
             elif [[ -e default.nix ]]; then
