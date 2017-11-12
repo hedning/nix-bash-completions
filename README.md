@@ -1,5 +1,5 @@
 # nix-bash-completions
-Bash completion for the nix command line tools.
+Bash completion for the [Nix](https://nixos.org/nix/), [NixOS](https://nixos.org/) and [NixOps](https://nixos.org/nixops/) command line tools.
 
 A lot of the boilerplate (options etc.) comes from [nix-zsh-completions](https://github.com/spwhitt/nix-zsh-completions).
 
