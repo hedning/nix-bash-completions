@@ -363,6 +363,7 @@ function _nix_legacy () {
                         esac
                     done
                     command_options=(
+                        ${nix_common_opts[*]}
                         ${nix_env_b[*]} $nix_env_from_profile
                         '(--preserve-installed|-P)'{--preserve-installed,-P}
                         '(--remove-all|-r)'{--remove-all,-r}
@@ -373,6 +374,7 @@ function _nix_legacy () {
                     ;;
                 --upgrade|-*([a-zA-Z])u*([a-zA-Z]))
                     command_options=(
+                        ${nix_common_opts[*]}
                         ${nix_env_b[*]}
                         ${nix_env_from_profile[*]}
                         '(-lt|-leq|-eq|--always)--lt'
@@ -383,14 +385,17 @@ function _nix_legacy () {
                     break
                     ;;
                 --uninstall|-*([a-zA-Z])e*([a-zA-Z]))
-                    command_options=('*:->installed_packages')
+                    command_options=(${nix_common_opts[*]}
+                                     '*:->installed_packages')
                     break
                     ;;
                 --set-flag)
+                    command_options=(${nix_common_opts[*]})
                     break
                     ;;
                 --query|-*([a-zA-Z])q*([a-zA-Z]))
                     command_options=(
+                        ${nix_common_opts[*]}
                         ${nix_env_b[*]}
                         '(--available|-a)'{--available,-a}
                         '(--status|-s)'{--status,-s}
@@ -401,15 +406,18 @@ function _nix_legacy () {
                     break
                     ;;
                     --switch-profile|-*([a-zA-Z])S*([a-zA-Z]))
-                        command_options=(':->nix_profile')
+                        command_options=(${nix_common_opts[*]}
+                                         ':->nix_profile')
                         break
                         ;;
                     --delete-generations)
-                        command_options=('*:->nix_generation')
+                        command_options=(${nix_common_opts[*]}
+                                         '*:->nix_generation')
                         break
                         ;;
                     --switch-generation|-[^-]#G[^-]#)
-                        command_options=(':->nix_generation')
+                        command_options=(${nix_common_opts[*]}
+                                         ':->nix_generation')
                         break
                         ;;
 
