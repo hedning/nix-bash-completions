@@ -47,7 +47,7 @@ function _parse () {
 
     ## Spec
     # :action -- A regular normal argument
-    # *:action -- Repeating normal argument
+    # :*action -- Repeating normal argument
 
     ## option spec
     # -o:action
@@ -108,7 +108,7 @@ function _parse () {
                 # Internal representation [group#][excludes#];
                 options[$flag]="$excludes:${split[1]}"
                 ;;
-            :*|\*:*)
+            :*)
                 arguments+=("$spec")
                 ;;
         esac
@@ -158,6 +158,7 @@ function _parse () {
             # Check if actions contains an exclusion pattern
             if [[ ${actions[0]} == *\# ]]; then
                 local prefix="${excluded_options:+|}"
+                # Don't add the exclusion glob if the current word is this option
                 [[ "$cword" != "$i" ]] \
                     && excluded_options+="$prefix${actions[0]:0:-1}"
                 print "$word's exclusion group:" "$prefix${actions[0]:0:-1}"
@@ -202,8 +203,8 @@ function _parse () {
             # Always add argument completors, even if empty
             local action="${arguments[0]}"
             print actio"n: $action"
-            if [[ "$action" == \*:* ]]; then
-                    completors+=("${action#\*:}")
+            if [[ "$action" == :\** ]]; then
+                    completors+=("${action#:\*}")
                     # Don't shift $arguments when the action is repeatable
             else
                 completors+=("${action#:}")
@@ -306,7 +307,7 @@ function _nix_legacy () {
                 '--drv-link:->empty' '--add-drv-link'
                 '--no-out-link'
                 {--out-link,-o}':->empty')
-            _parse '*:->file' ${nix_common_opts[*]} \
+            _parse ':*->file' ${nix_common_opts[*]} \
                    ${nix_boilerplate_opts[*]} \
                    ${nix_build_opts[*]} && return 0
             ;;
@@ -318,7 +319,7 @@ function _nix_legacy () {
                 # nix-shell only takes one -A, so override the default
                 "(--attr|-A)"{--attr,-A}':->attr_path'
                 '(--packages|-p|shell)'{--packages,-p}':*->package_attr_path')
-            _parse '*:->file' ${nix_common_opts[*]} \
+            _parse ':*->file' ${nix_common_opts[*]} \
                    + boiler \
                    ${nix_boilerplate_opts[*]} \
                    + shell \
@@ -356,12 +357,12 @@ function _nix_legacy () {
             for word in ${words[*]:1}; do
                 case "$word" in
                 --install|-*([a-zA-Z])i*([a-zA-Z]))
-                    local norm_arg='*:->installed_packages'
+                    local norm_arg=':*->installed_packages'
                     # Check if -A is supplied on command line
                     for word in ${words[*]:1}; do
                         case $word in
                             --attr|-*([a-zA-Z])A*([a-zA-Z]))
-                                norm_arg='*:->attr_path'
+                                norm_arg=':*->attr_path'
                                 ;;
                         esac
                     done
@@ -384,12 +385,12 @@ function _nix_legacy () {
                         '(-lt|-leq|-eq|--always)--leq'
                         '(-lt|-leq|-eq|--always)--eq'
                         '(-lt|-leq|-eq|--always)--always'
-                        '*:->installed_packages')
+                        ':*->installed_packages')
                     break
                     ;;
                 --uninstall|-*([a-zA-Z])e*([a-zA-Z]))
                     command_options=(${nix_env_common_opts[*]}
-                                     '*:->installed_packages')
+                                     ':*->installed_packages')
                     break
                     ;;
                 --set-flag)
@@ -415,7 +416,7 @@ function _nix_legacy () {
                         ;;
                     --delete-generations)
                         command_options=(${nix_env_common_opts[*]}
-                                         '*:->nix_generation')
+                                         ':*->nix_generation')
                         break
                         ;;
                     --switch-generation|-[^-]#G[^-]#)
@@ -480,7 +481,7 @@ function _nix_legacy () {
                         command_options=(
                             ${nix_dry_run[*]}
                             '--ignore-unknown'
-                            '*:->file')
+                            ':*->file')
                         break
                         ;;
                     --gc)
@@ -516,7 +517,7 @@ function _nix_legacy () {
                             esac
                         done
                         command_options=(${query_spec[*]} ${query_common[*]}
-                                         {requisite_options[*]} "*:->file")
+                                         {requisite_options[*]} ":*->file")
                         break
                         ;;
                     --verify)
@@ -528,7 +529,7 @@ function _nix_legacy () {
                         break
                         ;;
                     *)
-                        command_options=('*:->file')
+                        command_options=(':*->file')
                         break
                         ;;
                 esac
@@ -559,7 +560,7 @@ function _nix_legacy () {
             _parse \
                 '(--from)--to' '(--to)--from' '--sign' '--gzip' \
                 '--include-outputs' '(--use-substitutes -s)'{--use-substitutes,-s} \
-                ':_user_at_host' '*:->file' && return 0
+                ':_user_at_host' ':*->file' && return 0
             ;;
         nix-collect-garbage)
             _parse \
@@ -576,7 +577,7 @@ function _nix_legacy () {
                 "($ig)--base32" \
                 "($ig)--truncate" \
                 "($ig)--type:->hash_algo" \
-                "*:->file" && return 0
+                ":*->file" && return 0
 
             # TODO: Don't add file completion if we're using anything in $ig
             ;;
@@ -585,7 +586,7 @@ function _nix_legacy () {
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_opts[*]} '--xml' '--json' '--add-root' \
                 '--indirect' '--parse' '--eval' "--find-file:*->file"\
-                '--strict' '--read-write-mode' '*:->file' && return 0
+                '--strict' '--read-write-mode' ':*->file' && return 0
             ;;
         nix-install-package)
             _parse \
@@ -607,7 +608,7 @@ function _nix_legacy () {
                 '(--manifest-path)--manifest'\
                 '(--manifest)--manifest-path:->file'\
                 '--url-prefix:->url'\
-                '*:->file' && return 0
+                ':*->file' && return 0
             ;;
         nixos-rebuild)
             main_commands=(
@@ -702,7 +703,7 @@ function _nix_legacy () {
                    create)
                        main_options=(
                            ${nixops_search_path_args[*]}
-                           '*:->nix_file')
+                           ':*->nix_file')
                        break
                        ;;
                    modify)
@@ -926,7 +927,7 @@ function _nix () {
             for arg in ${args[*]}; do
                 local plural=""
                 [[ "$arg" == *S ]] && plural="*"
-                command_arguments+=("${plural}:->arg-$arg")
+                command_arguments+=(":${plural}->arg-$arg")
             done
 
             # Extract the lines containing the option descriptions
