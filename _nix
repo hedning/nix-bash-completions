@@ -862,7 +862,7 @@ function _nix () {
     local -a line
     local -A opt_args
 
-    print " --***-- nix"
+    type nix &> /dev/null || return
 
     local -a common_options
     common_options=("(--debug)"--debug "(-h|--help)"{-h,--help}
