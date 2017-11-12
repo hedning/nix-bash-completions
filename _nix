@@ -44,25 +44,21 @@ NIX_FILE
 
 function _parse () {
     # Takes in `spec ...` and parses the command line using it
+    # See README.md for more in depth explanation of the syntax
 
     ## Spec
     # :action -- A regular normal argument
     # :*action -- Repeating normal argument
 
     ## option spec
-    # -o:action
-    # [(pattern|pattern|...)][*]-f:action:[*]action
+    # simple case: '-o'
+    # [(pattern|pattern|...)][*]-f[:action[:[*]action ...]]
     # patterns to exclude from completion when option is typed
 
     ## action spec
     # ->string
     # set $state to 'string'
     # _function, function to run (isn't actually used though, so might be buggy)
-
-
-    # [*]-f:action:action
-    # [n]:action
-    # :[*]action
     local -A options=()
     local -a arguments=("command")
 
