@@ -135,7 +135,6 @@ function _parse () {
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
             print "consume option queue: $word ${opt_queue[0]}"
-            line+=("$word")
             local separator=${opt_args["$current_option"]:+:}
             opt_args["$current_option"]+=$separator"${word//:/\\:}"
 
