@@ -11,6 +11,10 @@ You need [bash-completion](https://github.com/scop/bash-completion) for it to wo
 
 The script also depends on `sed` being in the path.
 
+## Installation on NixOS
+
+You need `programs.bash.enableCompletion = true;` in `configuration.nix`. Then you can install it with `nix-env -i -f default.nix` until the `nix-bash-completions` package makes it to stable.
+
 ## Attribute path completion
 
 Completion of attribute paths is context aware, so supplying eg. `-f some/path/` will make `-A ` complete paths in `some/path/default.nix`, and will pick up `default.nix` or `shell.nix` in the current directory for `nix-build` and `nix-shell`.
@@ -51,6 +55,7 @@ Here the function `_known_hosts` will handle completion for the first argument a
 
 The options spec have a few more pieces on top of actions:
 - `[(pattern|pattern ...)][*]--option[:action[:action2] ... ]`
+
 The simplest case just being:
 - `--option`
 
