@@ -1000,7 +1000,7 @@ function _nix () {
                 for option in ${option_group[*]}; do
                     # Handle `run --keep/--unset` manually as they can be repeated
                     if [[ "$word" == run && "$option" == @(-k|--keep|-u|--unset) ]]; then
-                        command_options+=("*${option}:->PARAMS")
+                        command_options+=("*${option}:->option-PARAMS")
                     elif [[ "$option" == @(-I|--include|--arg|--argstr) ]]; then
                         # Repeatable options
                         command_options+=("*${option}"$ACTIONS)
@@ -1112,6 +1112,9 @@ function _nix () {
         option-TYPE)
             COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
             return
+            ;;
+        option-PARAMS)
+            COMPREPLY=($(compgen -v -- $cur))
             ;;
         option-PATH)
             return
