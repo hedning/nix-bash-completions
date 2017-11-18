@@ -440,6 +440,13 @@ function _nix_legacy () {
 
             case "$state" in
                 installed_packages)
+                    if [[ "$cur" == @("./"*|/*|\~*) ]]; then
+                        # Complete files and return if we're entering files with
+                        # absolute file syntax that nix will understand
+                        COMPREPLY=($(compgen -f -- $cur))
+                        return 0
+                    fi
+
                     local -a packages=($(nix-env -q))
                     packages=(${packages[*]%%-[0-9]*})
                     COMPREPLY=($(compgen -W "${packages[*]}" -- "$cur"))
