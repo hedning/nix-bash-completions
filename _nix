@@ -498,7 +498,8 @@ function _nix_legacy () {
                         break
                         ;;
                     --delete)
-                        command_options=('--ignore-liveness')
+                        command_options=('--ignore-liveness'
+                                        ':*->file')
                         break
                         ;;
                     --query|-*([a-zA-Z])q*([a-zA-Z]))
