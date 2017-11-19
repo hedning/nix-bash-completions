@@ -1,4 +1,4 @@
-function print () {
+function _nix_print () {
     return 0 # Comment out to turn on print debugging
     while [[ "$1" ]]; do
         echo  "$1" >> ~/log/nix
@@ -111,13 +111,13 @@ function _parse () {
         shift
         spec="$1"
     done
-    print  "    --**--" "-- Finished parsing spec"
-    print  "arguments:" "${arguments[*]}"
-    print "options" "${!options[*]}"
-    # print  groups: ${!groups[*]} ${groups[*]} 
+    _nix_print  "    --**--" "-- Finished parsing spec"
+    _nix_print  "arguments:" "${arguments[*]}"
+    _nix_print "options" "${!options[*]}"
+    # _nix_print  groups: ${!groups[*]} ${groups[*]} 
 
 
-    print  "-- Parse words"
+    _nix_print  "-- Parse words"
     # Use the parsed spec to handle the input
     # opt_arg queue
     local -a opt_queue=()
@@ -134,7 +134,7 @@ function _parse () {
         word=${words[$i]}
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
-            print "consume option queue: $word ${opt_queue[0]}"
+            _nix_print "consume option queue: $word ${opt_queue[0]}"
             local separator=${opt_args["$current_option"]:+:}
             opt_args["$current_option"]+=$separator"${word//:/\\:}"
 
@@ -147,7 +147,7 @@ function _parse () {
             fi
         elif [[ "$word" == --* ]]; then
             # Long option
-            print "Consume an option: $word ${options["$word"]}"
+            _nix_print "Consume an option: $word ${options["$word"]}"
             completors+=("$word")
             local -a actions=(${options["$word"]//:/ })
             # Check if actions contains an exclusion pattern
@@ -156,19 +156,19 @@ function _parse () {
                 # Don't add the exclusion glob if the current word is this option
                 [[ "$cword" != "$i" ]] \
                     && excluded_options+="$prefix${actions[0]:0:-1}"
-                print "$word's exclusion group:" "$prefix${actions[0]:0:-1}"
+                _nix_print "$word's exclusion group:" "$prefix${actions[0]:0:-1}"
                 actions=(${actions[*]:1})
             fi
             if [[ "${actions[*]}" ]]; then
                 current_option="$word"
                 # Add to the option argument queue
-                print  "option arguments: ${actions[*]}"
+                _nix_print  "option arguments: ${actions[*]}"
                 opt_queue=(${actions[*]})
-                print  "option queue: ${opt_queue[*]}"
+                _nix_print  "option queue: ${opt_queue[*]}"
             fi
         elif [[ "$word" == -* ]]; then
             # Short option, possibly stacked
-            print "Consume short options: $word ${options["$word"]}"
+            _nix_print "Consume short options: $word ${options["$word"]}"
             local flags=${word#-}
             completors+=("$word")
             while [[ "$flags" ]]; do
@@ -178,41 +178,41 @@ function _parse () {
                 if [[ ${actions[0]} == *\# ]]; then
                     local prefix="${excluded_options:+|}"
                     excluded_options+="$prefix${actions[0]:0:-1}"
-                    print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}" 
+                    _nix_print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}" 
                     actions=(${actions[*]:1})
                 fi
                 if [[ "${actions[*]}" ]]; then
                     current_option="$flag"
                     # Add to the option argument queue
-                    print  "option arguments: ${actions[*]}"
+                    _nix_print  "option arguments: ${actions[*]}"
                     opt_queue=(${actions[*]})
-                    print  "option queue: ${opt_queue[*]}"
+                    _nix_print  "option queue: ${opt_queue[*]}"
                 fi
                 flags="${flags:1}"
             done
         else
             # Consume a regular argument
-            print  "Consume a regular argument: $word"
+            _nix_print  "Consume a regular argument: $word"
             line+=("$word")
-            print  "Adding completor: ${arguments[0]}"
+            _nix_print  "Adding completor: ${arguments[0]}"
             # Always add argument completors, even if empty
             local action="${arguments[0]}"
-            print actio"n: $action"
+            _nix_print "action: $action"
             if [[ "$action" == :\** ]]; then
                     completors+=("${action#:\*}")
                     # Don't shift $arguments when the action is repeatable
             else
                 completors+=("${action#:}")
                 arguments=(${arguments[*]:1})
-                print  "rest of arguments: ${arguments[*]}"
+                _nix_print  "rest of arguments: ${arguments[*]}"
             fi
         fi
     done
 
-    print  "-- Finished parsing words: ${completors[*]}"
+    _nix_print  "-- Finished parsing words: ${completors[*]}"
 
     local completor=${completors[$cword]}
-    print  "completor: $completor" 
+    _nix_print  "completor: $completor" 
 
     case "$completor" in
         -\>*)
@@ -221,14 +221,14 @@ function _parse () {
             ;;
         -*)
             ## Complete options
-            # print  excluded_options before: $excluded_options 
+            # _nix_print  excluded_options before: $excluded_options 
             # local g
             # for g in ${!groups[*]}; do
             #     # echo group: $g, "${groups[$g]}"
             #     # resolve groups to globs
             #     excluded_options="${excluded_options//$g/${groups[$g]}}"
             # done
-            print  "excluded_options $excluded_options"
+            _nix_print  "excluded_options $excluded_options"
             COMPREPLY=($(compgen -W "${!options[*]}" -X "*($excluded_options)" -- "$cur"))
             return 0
             ;;
@@ -250,9 +250,9 @@ function _nix_legacy () {
     # words (cword)
     _init_completion -n = || return
 
-    print  "command line: ${words[*]}"
-    print  "number ${#words[*]}"
-    print  "cword $cword"
+    _nix_print  "command line: ${words[*]}"
+    _nix_print  "number ${#words[*]}"
+    _nix_print  "cword $cword"
 
     local -a nix_boilerplate_opts=('--help' '--version')
 
@@ -814,9 +814,9 @@ function _nix_legacy () {
            ;;
     esac
 
-    print  "state: $state"
-    print  "line: ${line[*]}"
-    print  "opt_args: ${!opt_args[*]} ${opt_args[*]}"
+    _nix_print  "state: $state"
+    _nix_print  "line: ${line[*]}"
+    _nix_print  "opt_args: ${!opt_args[*]} ${opt_args[*]}"
 
     # Handle completion of different types of arguments
     case "$state" in
@@ -851,7 +851,7 @@ function _nix_legacy () {
             elif [[ -e default.nix ]]; then
                 defexpr_path="import $(realpath default.nix) {}"
             fi
-            print  "defexpr: $defexpr_path" 
+            _nix_print  "defexpr: $defexpr_path" 
             _nix_attr_paths "$defexpr_path"
             return 0
             ;;
@@ -891,7 +891,7 @@ function _nix_legacy () {
             return 0
             ;;
         *)
-            print  "$state not implemented yet"
+            _nix_print  "$state not implemented yet"
             ;;
 
     esac
@@ -1024,7 +1024,7 @@ function _nix () {
         fi
     done
 
-    print "command arguments: "
+    _nix_print "command arguments: "
 
     _parse ':->main_command' \
            ${command_arguments[*]} \
@@ -1136,7 +1136,7 @@ function _nix () {
             COMPREPLY=($(compgen -W "${nix_options[*]}" -- $cur))
             ;;
         *)
-            print "$state not implemented"
+            _nix_print "$state not implemented"
     esac
 }
 complete -F _nix nix
