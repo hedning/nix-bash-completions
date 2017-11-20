@@ -1195,6 +1195,21 @@ function _nix () {
             COMPREPLY=($(compgen -v -- $cur))
             ;;
         option-PATH)
+            # --include <PATH> completion
+            if [[ "$cur" == *=* ]]; then
+                # This actually works due to bash's COMP_WORDBREAKS weirdness
+                compopt -o nospace
+                COMPREPLY=($(compgen -S "/" -d -- ${cur#*=}))
+            else
+                local -a nixpath=(${NIX_PATH//:/ })
+                local -a path_names
+                local p
+                for p in ${nixpath[*]}; do
+                    [[ "$p" == *=* ]] && path_names+=(${p%=*})
+                done
+                compopt -o nospace
+                COMPREPLY=($(compgen -S "=" -W "${path_names[*]}" -- "$cur"))
+            fi
             return
             ;;
         nixoption)
