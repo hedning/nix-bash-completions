@@ -248,7 +248,7 @@ function _nix_legacy () {
     local cur prev words cword
     # Setup current word, previous word, words and index of current word in
     # words (cword)
-    _init_completion -n = || return
+    _init_completion -n =: || return
 
     _nix_print  "command line: ${words[*]}"
     _nix_print  "number ${#words[*]}"
@@ -834,31 +834,46 @@ function _nix_legacy () {
             ;;
         attr_path)
             local defexpr_path=""
+            local file
             if [[ ${words[0]} == nix-env ]]; then
                 if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
                     # Assumes you only provide one -f/--file
-                    local file=${opt_args[-f]}${opt_args[--file]}
-                    # dequote
-                    file="$(dequote $file)"
-                    __expand_tilde_by_ref file
-                    if [[ -e "$file" ]]; then
-                        file=$(realpath "$file" 2>/dev/null)
-                    fi
-                    defexpr_path="import $file {}"
+                    file=${opt_args[-f]}${opt_args[--file]}
                 else
                     defexpr_path=$(_nix_gen_defexpr ~/.nix-defexpr)
                 fi
             elif [[ ${line[1]} ]]; then
-                local file="$(dequote ${line[1]})"
-                if [[ -e "$file" ]]; then
-                    file="$(realpath $file)"
-                fi
-                defexpr_path="import $file {}"
+                file="${line[1]}"
             elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
-                defexpr_path="import $(realpath shell.nix) {}"
+                file="shell.nix"
             elif [[ -e default.nix ]]; then
-                defexpr_path="import $(realpath default.nix) {}"
+                file="default.nix"
             fi
+
+            # Resolve files and urls
+            if [[ "$file" && -z "$defexpr_path" ]]; then
+                # dequote
+                file="$(dequote $file)"
+                __expand_tilde_by_ref file
+                if [[ -e "$file" ]]; then
+                    file=$(realpath "$file" 2>/dev/null)
+
+                # Check the cache to resolve urls
+                elif [[ "$file" == https://* ]]; then
+                    # works for nix 1.11
+                    local -a sha=($(printf "$file" | sha256sum -))
+                    local base=$(nix-hash --to-base32 --type sha256 \
+                                          ${sha[*]:0:1})
+                    local cache=${XDG_CACHE_HOME:-~/.cache}/nix/tarballs
+                    local link="$cache"/"$base"-file
+                    if [[ -e "$link" ]]; then
+                        file="$cache"/"$(basename $(readlink $link))"-unpacked
+                    fi
+                fi
+
+                defexpr_path="import $(realpath $file) {}"
+            fi
+
             _nix_print  "defexpr: $defexpr_path" 
             _nix_attr_paths "$defexpr_path"
             return 0
