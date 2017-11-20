@@ -325,11 +325,19 @@ function _nix_legacy () {
                 '--pure'
                 # nix-shell only takes one -A, so override the default
                 "(--attr|-A)"{--attr,-A}':->attr_path'
-                '(--packages|-p|shell)'{--packages,-p}':*->package_attr_path')
-            _parse ':*->file' ${nix_common_opts[*]} \
+                '(--packages|-p)'{--packages,-p})
+
+            local norm_arguments=':*->file'
+            for word in ${words[*]:1}; do
+                case "$word" in
+                    --packages|-*([a-zA-Z])p*([a-zA-Z]))
+                        norm_arguments=':*->package_attr_path'
+                        break
+                esac
+            done
+            _parse $norm_arguments ${nix_common_opts[*]} \
                    + boiler \
                    ${nix_boilerplate_opts[*]} \
-                   + shell \
                    ${nix_shell_opts[*]} && return 0
             ;;
         nix-env)
