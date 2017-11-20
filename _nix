@@ -871,7 +871,7 @@ function _nix_legacy () {
                     fi
                 fi
 
-                defexpr_path="import $(realpath $file) {}"
+                defexpr_path="import $file {}"
             fi
 
             _nix_print  "defexpr: $defexpr_path" 
