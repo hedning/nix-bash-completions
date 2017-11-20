@@ -1164,8 +1164,28 @@ function _nix () {
         option-COMMAND)
             COMPREPLY=($(compgen -c -- $cur))
             ;;
-        option-@(FILE|FILES))
+        option-FILE)
+            if [[ "$cur" == channel:* ]]; then
+                local -a channels=(
+                    nixos-13.10           nixos-16.09
+                    nixos-14.04           nixos-16.09-small
+                    nixos-14.04-small     nixos-17.03
+                    nixos-14.12           nixos-17.03-small
+                    nixos-14.12-small     nixos-17.09
+                    nixos-15.09           nixos-17.09-small
+                    nixos-15.09-small     nixos-unstable
+                    nixos-16.03           nixos-unstable-small
+                    nixos-16.03-small     nixpkgs-17.09-darwin
+                    nixos-16.03-testing   nixpkgs-unstable)
+                COMPREPLY=($(compgen -W "${channels[*]}" -- "${cur#*:}"))
+                return
+            fi
             COMPREPLY=($(compgen -f -- $cur))
+            return
+            ;;
+        option-FILES)
+            COMPREPLY=($(compgen -f -- $cur))
+            return
             ;;
         option-TYPE)
             COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
