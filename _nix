@@ -258,10 +258,11 @@ function _nix_legacy () {
 
     local nix_repair='--repair';
 
-    local nix_search_path_args='-I:->file'
+    local nix_search_path_args='-I:->option-PATH'
 
     # Misc Nix options accepted by nixos-rebuild
     local -a nix_common_nixos_rebuild=(
+        ${nix_search_path_args}
         '(--verbose|-v)'{--verbose,-v}
         '(--no-build-output|-Q)'{--no-build-output,-Q}
         '(--max-jobs|-j)'{--max-jobs,-j}':->empty' '--cores'
@@ -274,7 +275,6 @@ function _nix_legacy () {
     # Used in: nix-build, nix-env, nix-instantiate, nix-shell
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
-            ${nix_search_path_args}
             '(--attr|-A)*'{--attr,-A}':->attr_path' '(--expr|-E)'{--expr,-E}
             '--arg:->empty:->empty' '--argstr:->empty:->empty'
             '--max-silent-time:->empty'
@@ -638,6 +638,7 @@ function _nix_legacy () {
                 'switch' 'boot' 'test' 'build' 'dry-build'
                 'dry-activate' 'build-vm' 'build-vm-with-bootloader')
             _parse \
+                ${nix_common_nixos_rebuild[*]} \
                 '--upgrade' '--install-grub' "--no-build-nix"             \
                 '--fast' '--rollback'                                     \
                 '(--profile-name|-p)'{--profile-name,-p}':->nix_profile'  \
@@ -893,6 +894,24 @@ function _nix_legacy () {
         package_attr_path)
             _nix_attr_paths "import <nixpkgs>"
             return 0
+            ;;
+        option-PATH)
+            # --include <PATH> completion
+            if [[ "$cur" == *=* ]]; then
+                # This actually works due to bash's COMP_WORDBREAKS weirdness
+                compopt -o nospace
+                COMPREPLY=($(compgen -S "/" -d -- ${cur#*=}))
+            else
+                local -a nixpath=(${NIX_PATH//:/ })
+                local -a path_names
+                local p
+                for p in ${nixpath[*]}; do
+                    [[ "$p" == *=* ]] && path_names+=(${p%=*})
+                done
+                compopt -o nospace
+                COMPREPLY=($(compgen -S "=" -W "${path_names[*]}" -- "$cur"))
+            fi
+            return
             ;;
         nixoption)
             local -a nixoptions=(
