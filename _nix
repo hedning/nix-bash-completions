@@ -994,9 +994,11 @@ function _nix () {
                                                    -e 's=<.*=='))
                 # Extract any arguments, by stripping the options (and <|>)
                 local -a option_args=(
-                    $(echo "$option_spec" | sed -E \
-                                                -e 's=[^<]*<==' \
-                                                -e 's=<|>= =g'))
+                    $(echo "$option_spec" \
+                          | sed -E \
+                                -e "s=.*${option_group[*]: -1}==" \
+                                -e 's=[^<]*<==' \
+                                -e 's=<|>= =g'))
 
                 local ACTIONS=""
                 for arg in ${option_args[*]}; do
