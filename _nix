@@ -860,8 +860,16 @@ function _nix_legacy () {
 
                 # Check the cache to resolve urls
                 elif [[ "$file" == https://* ]]; then
-                    # works for nix 1.11
-                    local -a sha=($(printf "$file" | sha256sum -))
+                    local -a sha
+                    local version="$(${words[0]} --version)"
+                    if [[ "${version##* }" == 1.11.* ]]; then
+                        # works for nix 1.11
+                        sha=($(printf "$file" | sha256sum -))
+                    else
+                        # works for nix 1.12
+                        local name="${file##*/}"
+                        sha=($(printf "$name\0$file" | sha256sum -))
+                    fi
                     local base=$(nix-hash --to-base32 --type sha256 \
                                           ${sha[*]:0:1})
                     local cache=${XDG_CACHE_HOME:-~/.cache}/nix/tarballs
