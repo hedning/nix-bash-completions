@@ -948,7 +948,7 @@ function _nix () {
     local cur prev words cword
     # Setup current word, previous word, words and index of current word in
     # words (cword)
-    _init_completion -n = || return
+    _init_completion -n =: || return
 
     local state context
     local -a line
@@ -1091,6 +1091,19 @@ function _nix () {
                 __expand_tilde_by_ref file
                 if [[ -e "$file" ]]; then
                     file=$(realpath "$file" 2>/dev/null)
+                elif [[ "$file" == @(https://*|channel:*) ]]; then
+                    # Resolve channel: syntax
+                    if [[ "$file" == channel:* ]]; then
+                        file="https://nixos.org/channels/"${file:8}"/nixexprs.tar.xz"
+                    fi
+                    local name="${file##*/}"
+                    local -a sha=($(printf "$name\0$file" | sha256sum -))
+                    local base=$(nix to-base32 --type sha256 ${sha[*]:0:1})
+                    local cache=${XDG_CACHE_HOME:-~/.cache}/nix/tarballs
+                    local link="$cache"/"$base"-file
+                    if [[ -e "$link" ]]; then
+                        file="$cache"/"$(basename $(readlink $link))"-unpacked
+                    fi
                 fi
                 defexpr="import $file {}"
             else
