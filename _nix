@@ -859,7 +859,7 @@ function _nix_legacy () {
                     file=$(realpath "$file" 2>/dev/null)
 
                 # Check the cache to resolve urls
-                elif [[ "$file" == https://* ]]; then
+                elif [[ "$file" == @(https://*|channel:*) ]]; then
                     local -a sha
                     local version="$(${words[0]} --version)"
                     if [[ "${version##* }" == 1.11.* ]]; then
@@ -867,6 +867,10 @@ function _nix_legacy () {
                         sha=($(printf "$file" | sha256sum -))
                     else
                         # works for nix 1.12
+                        # Resolve channel: syntax
+                        if [[ "$file" == channel:* ]]; then
+                            file="https://nixos.org/channels/"${file:8}"/nixexprs.tar.xz"
+                        fi
                         local name="${file##*/}"
                         sha=($(printf "$name\0$file" | sha256sum -))
                     fi
