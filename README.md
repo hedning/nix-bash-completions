@@ -11,9 +11,11 @@ You need [bash-completion](https://github.com/scop/bash-completion) for it to wo
 
 The script also depends on `sed` being in the path.
 
-## Installation on NixOS
+## Installation
 
-You need `programs.bash.enableCompletion = true;` in `configuration.nix`. Then you can install it with `nix-env -i -f default.nix` until the `nix-bash-completions` package makes it to stable.
+On NixOS you need `programs.bash.enableCompletion = true;` in `configuration.nix`. For other systems you need bash to source all files in  `~/.nix-profile/share/bash-completion/completions/`. 
+
+Then you can install it from the cloned git repo with `nix-env -i -f default.nix`, or pull it down using the 17.09 small channel: `nix-env -iA nix-bash-completions -f https://nixos.org/channels/nixos-17.09-small/nixexprs.tar.xz`.
 
 ## Attribute path completion
 
