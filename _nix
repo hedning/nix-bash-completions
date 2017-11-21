@@ -451,14 +451,13 @@ function _nix_legacy () {
                     if [[ "$cur" == @("./"*|/*|\~*) ]]; then
                         # Complete files and return if we're entering files with
                         # absolute file syntax that nix will understand
-                        COMPREPLY=($(compgen -f -- $cur))
-                        return 0
+                        state=file
+                    else
+                        local -a packages=($(nix-env -q))
+                        packages=(${packages[*]%%-[0-9]*})
+                        COMPREPLY=($(compgen -W "${packages[*]}" -- "$cur"))
+                        return
                     fi
-
-                    local -a packages=($(nix-env -q))
-                    packages=(${packages[*]%%-[0-9]*})
-                    COMPREPLY=($(compgen -W "${packages[*]}" -- "$cur"))
-                    return
                     ;;
                 nix_generation)
                     local -a generations=($(nix-env --list-generations | \
@@ -900,8 +899,8 @@ function _nix_legacy () {
             # --include <PATH> completion
             if [[ "$cur" == *=* ]]; then
                 # This actually works due to bash's COMP_WORDBREAKS weirdness
-                compopt -o nospace
-                COMPREPLY=($(compgen -S "/" -d -- ${cur#*=}))
+                compopt -o filenames
+                COMPREPLY=($(compgen -d -- ${cur#*=}))
             else
                 local -a nixpath=(${NIX_PATH//:/ })
                 local -a path_names
@@ -936,10 +935,14 @@ function _nix_legacy () {
             return
             ;;
         file|nix_file)
+            compopt -o filenames
             COMPREPLY=($(compgen -f $cur))
+            return
             ;;
         directory)
+            compopt -o filenames
             COMPREPLY=($(compgen -d $cur))
+            return
             ;;
         hash_algo)
             COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
@@ -1099,6 +1102,7 @@ function _nix () {
             if [[ "$cur" == @("./"*|/*|\~*) ]]; then
                 # Complete files and return if we're entering files with
                 # absolute file syntax that nix will understand
+                compopt -o nospace
                 COMPREPLY=($(compgen -f -- $cur))
                 return 0
             fi
@@ -1158,6 +1162,7 @@ function _nix () {
             return 0
             ;;
         arg-@(PATH|PATHS|FILES|NAR))
+            compopt -o filenames
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
@@ -1178,6 +1183,7 @@ function _nix () {
             ;;
         option-STORE-URI)
             ## Not sure how to present alternatives here
+            compopt -o filenames
             COMPREPLY=($(compgen -d -- $cur))
             return
             ;;
@@ -1200,10 +1206,12 @@ function _nix () {
                 COMPREPLY=($(compgen -W "${channels[*]}" -- "${cur#*:}"))
                 return
             fi
+            compopt -o filenames
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
         option-FILES)
+            compopt -o filenames
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
@@ -1218,8 +1226,8 @@ function _nix () {
             # --include <PATH> completion
             if [[ "$cur" == *=* ]]; then
                 # This actually works due to bash's COMP_WORDBREAKS weirdness
-                compopt -o nospace
-                COMPREPLY=($(compgen -S "/" -d -- ${cur#*=}))
+                compopt -o filenames
+                COMPREPLY=($(compgen -d -- ${cur#*=}))
             else
                 local -a nixpath=(${NIX_PATH//:/ })
                 local -a path_names
