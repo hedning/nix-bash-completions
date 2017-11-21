@@ -1,7 +1,7 @@
 # nix-bash-completions
 Bash completion for the [Nix](https://nixos.org/nix/), [NixOS](https://nixos.org/) and [NixOps](https://nixos.org/nixops/) command line tools.
 
-The aim is full completion support for every argument, option and option argument, as long as everything that's needed is available locally. For instance when accessing a nixpkgs repo through an url, and it has been previously downloaded, completion should be offered using the local copy. Any behavior which doesn't agree with the actual execution of the command is considered bug. Issues are very welcome as I primarily use zsh and therefor won't catch that many bugs through daily usage.
+The aim is full completion support for every argument, option and option argument, as long as everything that's needed is available locally. For instance when accessing a nixpkgs repo through an url, and it has been previously downloaded, completion should be offered using the local copy. Any behavior which doesn't agree with the actual execution of the command is considered a bug. Issues are very welcome as I primarily use zsh and therefor won't catch that many bugs through daily usage.
 
 A thank you goes out to [Spencer Whitt](https://github.com/spwhitt) who started [nix-zsh-completions](https://github.com/spwhitt/nix-zsh-completions), as a lot of the boilerplate (options etc.) is taken from there.
 
