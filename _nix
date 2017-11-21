@@ -502,6 +502,7 @@ function _nix_legacy () {
                     --realise|-*([a-zA-Z])r*([a-zA-Z]))
                         command_options=(
                             ${nix_dry_run[*]}
+                            '--add-root:->directory' '--indirect'
                             '--ignore-unknown'
                             ':*->file')
                         break
@@ -607,7 +608,7 @@ function _nix_legacy () {
         nix-instantiate)
             _parse \
                 ${nix_boilerplate_opts[*]} \
-                ${nix_common_opts[*]} '--xml' '--json' '--add-root' \
+                ${nix_common_opts[*]} '--xml' '--json' '--add-root:->directory' \
                 '--indirect' '--parse' '--eval' "--find-file:*->file"\
                 '--strict' '--read-write-mode' ':*->file' && return 0
             ;;
