@@ -7,21 +7,21 @@ A thank you goes out to [Spencer Whitt](https://github.com/spwhitt) who started 
 
 ## Usage
 
-Just source the `_nix` file: `. _nix`, and start tabbing.
+For quick testing just source the `_nix` file: `. _nix`, and start tabbing.
 
-You need [bash-completion](https://github.com/scop/bash-completion) for it to work (which is the case if most commands already provides completions). On NixOS this is done by setting `programs.bash.enableCompletion`.
+Some arguments support several types of input, but due to bash's limited completion system only exposes one type at a time. For instance `nix eval <tab>` will give you the default completion which is attribute paths, but `nix eval ./<tab>` will give you file completion (as store paths are valid input). If you aren't getting file completion on an option or argument which support it when starting off with `./`, `~/` or `/` please report it in an issue and it should be fixed promptly. Another example is `nix run --file channel:<tab>` which will complete channel names instead of files.
 
-The script also depends on `sed` being in the path.
+Completion of attribute paths is context aware, so eg. `nix-env -i -f some/path/ -A <tab>` complete paths in `./some/path/default.nix`. It will also pick up `default.nix` or `shell.nix` in the current directory for `nix-build -A` and `nix-shell -A`. Things like `nix-shell -I nixpkgs=. -p <tab>` is also supported.
 
-## Installation
+## Installation and dependencies
 
-On NixOS you need `programs.bash.enableCompletion = true;` in `configuration.nix`. For other systems you need bash to source all files in  `~/.nix-profile/share/bash-completion/completions/`. 
+You need [bash-completion](https://github.com/scop/bash-completion) for it to work (which is the case if most commands already provides completions).
+
+On NixOS this is done by setting `programs.bash.enableCompletion = true;` in `configuration.nix`. 
 
 Then you can install it from the cloned git repo with `nix-env -i -f default.nix`, or pull it down using the 17.09 small channel: `nix-env -iA nix-bash-completions -f https://nixos.org/channels/nixos-17.09-small/nixexprs.tar.xz`.
 
-## Attribute path completion
-
-Completion of attribute paths is context aware, so supplying eg. `-f some/path/` will make `-A ` complete paths in `some/path/default.nix`, and will pick up `default.nix` or `shell.nix` in the current directory for `nix-build` and `nix-shell`.
+For other systems you need bash to source all files in  `~/.nix-profile/share/bash-completion/completions/` after installation. 
 
 ## Implementation
 
