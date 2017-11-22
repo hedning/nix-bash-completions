@@ -25,7 +25,7 @@ Completion of attribute paths is context aware, so supplying eg. `-f some/path/`
 
 ## Implementation
 
-The script runs on top of `_parser` which is a bare bones implementation of zsh's [`_arguments`](http://zsh.sourceforge.net/Doc/Release/Completion-System.html#Completion-Functions) with some minor modifications to the syntax, and a bunch of stuff not implemented. A brief description of the `_parser` syntax follows, for anyone interested in reading the code, or using `_parser` for other completion scripts.
+The script runs on top of `_parser` which is a bare bones implementation of zsh's [`_arguments`](http://zsh.sourceforge.net/Doc/Release/Completion-System.html#index-_005farguments) with some minor modifications to the syntax, and a bunch of stuff not implemented. A brief description of the `_parser` syntax follows, for anyone interested in reading the code, or using `_parser` for other completion scripts.
 
 ### `_parser` syntax
 `_parser` takes as arguments specifications of options and normal arguments.
