@@ -954,7 +954,7 @@ function _nix_legacy () {
             return
             ;;
         hash_algo)
-            COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
+            COMPREPLY=($(compgen -W "md5 sha1 sha256 sha512" -- "$cur"))
             return 0
             ;;
         *)
@@ -1225,7 +1225,7 @@ function _nix () {
             return
             ;;
         option-TYPE)
-            COMPREPLY=($(compgen -W "md5 sha1 sha256" -- "$cur"))
+            COMPREPLY=($(compgen -W "md5 sha1 sha256 sha512" -- "$cur"))
             return
             ;;
         option-PARAMS)
