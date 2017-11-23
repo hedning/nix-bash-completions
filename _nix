@@ -341,18 +341,19 @@ function _nix_legacy () {
                 "(--attr|-A)"{--attr,-A}':->attr_path'
                 '(--packages|-p)'{--packages,-p})
 
-            local norm_arguments=':*->file'
-            for word in ${words[*]:1}; do
-                case "$word" in
-                    --packages|-*([a-zA-Z])p*([a-zA-Z]))
-                        norm_arguments=':*->package_attr_path'
-                        break
-                esac
-            done
-            _parse $norm_arguments ${nix_common_opts[*]} \
+            _parse ':*->package_attr_path' ${nix_common_opts[*]} \
                    + boiler \
                    ${nix_boilerplate_opts[*]} \
                    ${nix_shell_opts[*]} && return 0
+
+            if [[ "$state" == package_attr_path ]]; then
+                if [[ ${opts[--packages]} || ${opts[-p]} ]]; then
+                    _nix_attr_paths "import <nixpkgs>"
+                    return 0
+                else
+                    state=file
+                fi
+            fi
             ;;
         nix-env)
             local -a main_options=(
@@ -903,10 +904,6 @@ function _nix_legacy () {
 
             _nix_print  "defexpr: $defexpr_path" 
             _nix_attr_paths "$defexpr_path"
-            return 0
-            ;;
-        package_attr_path)
-            _nix_attr_paths "import <nixpkgs>"
             return 0
             ;;
         option-PATH)
