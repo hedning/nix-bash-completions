@@ -1110,21 +1110,6 @@ function _nix_completion () {
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
-        arg-REGEX)
-            return
-            ;;
-        arg-STRINGS)
-            return
-            ;;
-        option-NAME)
-            return
-            ;;
-        option-EXPR)
-            return
-            ;;
-        option-STRING)
-            return
-            ;;
         option-STORE-URI)
             ## Not sure how to present alternatives here
             compopt -o filenames
@@ -1192,7 +1177,7 @@ function _nix_completion () {
                                                    -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
             COMPREPLY=($(compgen -W "${nix_options[*]}" -- $cur))
             ;;
-        *)
+        *|arg-REGEX|arg-STRINGS|option-NAME|option-EXPR|option-STRING)
             _nix_print  "$state not implemented yet"
             ;;
 
