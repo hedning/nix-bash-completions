@@ -159,6 +159,8 @@ function _parse () {
             _nix_print "Consume an option: $word ${options["$word"]}"
             completors+=("$word")
             local -a actions=(${options["$word"]//:/ })
+            # Register the flag being on the command line
+            opts[${word}]=1
             # Check if actions contains an exclusion pattern
             if [[ ${actions[0]} == *\# ]]; then
                 local prefix="${excluded_options:+|}"
@@ -182,6 +184,8 @@ function _parse () {
             completors+=("$word")
             while [[ "$flags" ]]; do
                 local flag="-${flags:0:1}"
+                # Register the flag being on the command line
+                opts[${flag}]=1
                 local -a actions=(${options["$flag"]//:/ })
                 # Check if actions contains an exclusion pattern
                 if [[ ${actions[0]} == *\# ]]; then
@@ -303,6 +307,7 @@ function _nix_legacy () {
     local state context word opt
     local -a line
     local -A opt_args
+    local -A opts
 
     # Handle the different nix* commands
     #
@@ -985,6 +990,7 @@ function _nix () {
     local state context
     local -a line
     local -A opt_args
+    local -A opts
 
     type nix &> /dev/null || return
 
