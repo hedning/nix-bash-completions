@@ -720,7 +720,7 @@ function _nix_completion () {
                '--confirm' '--debug')
            local -a nixops_include_exclude=(
                '--include:_known_hosts' '--exclude:_known_hosts')
-           local -a nixops_search_path_args=('-I:->directory')
+           local -a nixops_search_path_args=('-I:->option-PATH')
 
 
            local -a command_options=()
