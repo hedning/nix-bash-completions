@@ -263,7 +263,7 @@ function _nix_legacy () {
         '(--keep-going|-k)'{--keep-going,-k}
         '(--keep-failed|-K)'{--keep-failed,-K}
         '--fallback' '--show-trace'
-        '--option:->nixoption:->nixoptionvalue'
+        '--option:->legacy-option:->legacy-option-value'
         ${nix_repair})
 
     # Used in: nix-build, nix-env, nix-instantiate, nix-shell
@@ -1007,7 +1007,7 @@ function _nix_legacy () {
             _nix_attr_paths "$defexpr_path"
             return 0
             ;;
-        nixoption)
+        legacy-option)
             local -a nixoptions=(
                 'gc-keep-outputs' 'gc-keep-derivations'
                 'env-keep-derivations' 'build-max-jobs'
