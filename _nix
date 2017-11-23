@@ -237,8 +237,8 @@ function _parse () {
     esac
 }
 
-# Completions for all nix-commands except for nix
-function _nix_legacy () {
+# Completions for all nix commands
+function _nix_completion () {
     local cur prev words cword
     # Setup current word, previous word, words and index of current word in
     # words (cword)
@@ -1181,7 +1181,7 @@ function _nix_legacy () {
     return 1
 }
 # Set _nix_build to handle completion for nix-build
- complete -F _nix_legacy \
+complete -F _nix_completion \
           nix-build nix-shell nix-env nix-store \
           nix-channel nix-copy-closure nix-collect-garbage \
           nix-hash nix-collect-garbage nix-instantiate \
