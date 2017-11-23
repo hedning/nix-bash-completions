@@ -88,9 +88,6 @@ function _parse () {
             spec="${spec#*\)}"
         fi
         case "$spec" in
-            # *-\>*)
-            #     # check if we're using -> syntax
-            #     ;;
             +)
                 shift
                 cur_group="$1"
@@ -225,14 +222,6 @@ function _parse () {
             return 1
             ;;
         -*)
-            ## Complete options
-            # _nix_print  excluded_options before: $excluded_options 
-            # local g
-            # for g in ${!groups[*]}; do
-            #     # echo group: $g, "${groups[$g]}"
-            #     # resolve groups to globs
-            #     excluded_options="${excluded_options//$g/${groups[$g]}}"
-            # done
             _nix_print  "excluded_options $excluded_options"
             COMPREPLY=($(compgen -W "${!options[*]}" -X "*($excluded_options)" -- "$cur"))
             return 0
