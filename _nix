@@ -823,6 +823,120 @@ function _nix_legacy () {
                   ${main_options[*]} \
                   ${nix_boilerplate_opts[*]} && return 0
            ;;
+       nix)
+           type nix &> /dev/null || return
+
+           local -a common_options
+           common_options=("(--debug)"--debug "(-h|--help)"{-h,--help}
+                           "(--help-config)"--help-config
+                           "*--builders:->machine" "--store:->option-STORE-URI"
+                           "*--option:->nixoption:->nixoptionvalue"
+                           "(--quiet)--quiet" "*{-v,--verbose}"
+                           "(--version)"--version)
+
+           # Extract the commands with descriptions
+           # like ('command:some description' 'run:run some stuff')
+           main_commands=(
+               $(nix --help | sed -E \
+                                  -e '/^Available commands/,/^$/!d' \
+                                  -e '/^Available commands/d' \
+                                  -e '/^$/d' \
+                                  -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
+           # Add commands to an associative array for easy lookup
+           local -A command_lookup
+           local main_command
+           for main_command in ${main_commands[*]}; do
+               command_lookup[$main_command]=1
+           done
+
+           local -a command_options=()
+           local -a command_arguments=()
+           # Setup the correct command_arguments and command_options depending on which
+           # command we've typed
+           local word
+           for word in ${words[*]:1}; do
+
+               # Check if we're in a valid command
+               if [[ "${command_lookup[$word]}" == 1 ]]; then
+                   # Extract an array describing the possible arguments to the
+                   # command eg. (NAR PATH) for cat-nar or (INSTALLABLES) for run
+                   local -a args=(
+                       $(nix $word --help | sed -E \
+                                                -e '2,$d' \
+                                                -e 's=^Usage.*<FLAGS>==' \
+                                                -e 's=\.|\?|<|>==g'))
+                   # And add the corresponding completors
+                   local arg
+                   for arg in ${args[*]}; do
+                       local plural=""
+                       [[ "$arg" == *S ]] && plural="*"
+                       command_arguments+=(":${plural}->arg-$arg")
+                   done
+
+                   # Extract the lines containing the option descriptions
+                   # Strip out the human descriptions
+                   local -a option_descriptions
+                   option_descriptions=(
+                       $(nix $word --help | sed -E \
+                                                -e '/^Flags:/,/^$/!d' \
+                                                -e "/^Flags:/d" \
+                                                -e 's/(.*)  .*/\1/' \
+                                                -e 's/ //g' \
+                                                -e '/^$/d'))
+
+                   local option option_spec
+                   for option_spec in ${option_descriptions[*]}; do
+
+                       # Extract the options by stripping everything starting at '<'
+                       # (and ',')
+                       # local flags="${option_spec##<*/}"
+                       # local -a option_group=(${flags/,/ })
+
+                       local -a option_group=($(echo "$option_spec" \
+                                                    | sed -E \
+                                                          -e 's=,= =' \
+                                                          -e 's=<.*=='))
+                       # Extract any arguments, by stripping the options (and <|>)
+                       local -a option_args=(
+                           $(echo "$option_spec" \
+                                 | sed -E \
+                                       -e "s=.*${option_group[*]: -1}==" \
+                                       -e 's=[^<]*<==' \
+                                       -e 's=<|>= =g'))
+
+                       local ACTIONS=""
+                       for arg in ${option_args[*]}; do
+                           local plural=""
+                           [[ "$arg" == *S ]] && plural="*"
+                           ACTIONS+=":${plural}->option-$arg"
+                       done
+
+                       for option in ${option_group[*]}; do
+                           # Handle `run --keep/--unset` manually as they can be repeated
+                           if [[ "$word" == run && "$option" == @(-k|--keep|-u|--unset) ]]; then
+                               command_options+=("*${option}:->option-PARAMS")
+                           elif [[ "$option" == @(-I|--include|--arg|--argstr) ]]; then
+                               # Repeatable options
+                               command_options+=("*${option}"$ACTIONS)
+                           else
+                               # Default to mutually exclusive non-repeatable options
+                               local exclusions="${option_group[*]}"
+                               command_options+=("(${exclusions// /|})"$option$ACTIONS)
+                           fi
+                       done
+                   done
+
+                   break
+               fi
+           done
+
+           _nix_print "command arguments: "
+
+           _parse ':->main_command' \
+                  ${command_arguments[*]} \
+                  ${common_options[*]} \
+                  ${command_options[*]} && return 0
+           ;;
     esac
 
     _nix_print  "state: $state"
@@ -954,156 +1068,6 @@ function _nix_legacy () {
             ;;
         hash_algo)
             COMPREPLY=($(compgen -W "md5 sha1 sha256 sha512" -- "$cur"))
-            return 0
-            ;;
-        *)
-            _nix_print  "$state not implemented yet"
-            ;;
-
-    esac
-    return 1
-}
-# Set _nix_build to handle completion for nix-build
- complete -F _nix_legacy \
-          nix-build nix-shell nix-env nix-store \
-          nix-channel nix-copy-closure nix-collect-garbage \
-          nix-hash nix-collect-garbage nix-instantiate \
-          nix-install-package nix-prefetch-url nix-push \
-          nixos-rebuild nixos-install nixos-version \
-          nixos-container nixos-generate-config nixos-build-vms \
-          nixops
-
-
-# nix-1.12 nix command
-function _nix () {
-    local cur prev words cword
-    # Setup current word, previous word, words and index of current word in
-    # words (cword)
-    _init_completion -n =: || return
-
-    local state context
-    local -a line
-    local -A opt_args
-    local -A opts
-
-    type nix &> /dev/null || return
-
-    local -a common_options
-    common_options=("(--debug)"--debug "(-h|--help)"{-h,--help}
-                    "(--help-config)"--help-config
-                    "*--builders:->machine" "--store:->option-STORE-URI"
-                    "*--option:->nixoption:->nixoptionvalue"
-                    "(--quiet)--quiet" "*{-v,--verbose}"
-                    "(--version)"--version)
-
-    # Extract the commands with descriptions
-    # like ('command:some description' 'run:run some stuff')
-    local -a main_commands
-    main_commands=(
-        $(nix --help | sed -E \
-                           -e '/^Available commands/,/^$/!d' \
-                           -e '/^Available commands/d' \
-                           -e '/^$/d' \
-                           -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
-    # Add commands to an associative array for easy lookup
-    local -A command_lookup
-    local main_command
-    for main_command in ${main_commands[*]}; do
-        command_lookup[$main_command]=1
-    done
-
-    local -a command_options=()
-    local -a command_arguments=()
-    # Setup the correct command_arguments and command_options depending on which
-    # command we've typed
-    local word
-    for word in ${words[*]:1}; do
-
-        # Check if we're in a valid command
-        if [[ "${command_lookup[$word]}" == 1 ]]; then
-            # Extract an array describing the possible arguments to the
-            # command eg. (NAR PATH) for cat-nar or (INSTALLABLES) for run
-            local -a args=(
-                $(nix $word --help | sed -E \
-                                         -e '2,$d' \
-                                         -e 's=^Usage.*<FLAGS>==' \
-                                         -e 's=\.|\?|<|>==g'))
-            # And add the corresponding completors
-            local arg
-            for arg in ${args[*]}; do
-                local plural=""
-                [[ "$arg" == *S ]] && plural="*"
-                command_arguments+=(":${plural}->arg-$arg")
-            done
-
-            # Extract the lines containing the option descriptions
-            # Strip out the human descriptions
-            local -a option_descriptions
-            option_descriptions=(
-                $(nix $word --help | sed -E \
-                                         -e '/^Flags:/,/^$/!d' \
-                                         -e "/^Flags:/d" \
-                                         -e 's/(.*)  .*/\1/' \
-                                         -e 's/ //g' \
-                                         -e '/^$/d'))
-
-            local option option_spec
-            for option_spec in ${option_descriptions[*]}; do
-
-                # Extract the options by stripping everything starting at '<'
-                # (and ',')
-                # local flags="${option_spec##<*/}"
-                # local -a option_group=(${flags/,/ })
-
-                local -a option_group=($(echo "$option_spec" \
-                                             | sed -E \
-                                                   -e 's=,= =' \
-                                                   -e 's=<.*=='))
-                # Extract any arguments, by stripping the options (and <|>)
-                local -a option_args=(
-                    $(echo "$option_spec" \
-                          | sed -E \
-                                -e "s=.*${option_group[*]: -1}==" \
-                                -e 's=[^<]*<==' \
-                                -e 's=<|>= =g'))
-
-                local ACTIONS=""
-                for arg in ${option_args[*]}; do
-                    local plural=""
-                    [[ "$arg" == *S ]] && plural="*"
-                    ACTIONS+=":${plural}->option-$arg"
-                done
-
-                for option in ${option_group[*]}; do
-                    # Handle `run --keep/--unset` manually as they can be repeated
-                    if [[ "$word" == run && "$option" == @(-k|--keep|-u|--unset) ]]; then
-                        command_options+=("*${option}:->option-PARAMS")
-                    elif [[ "$option" == @(-I|--include|--arg|--argstr) ]]; then
-                        # Repeatable options
-                        command_options+=("*${option}"$ACTIONS)
-                    else
-                        # Default to mutually exclusive non-repeatable options
-                        local exclusions="${option_group[*]}"
-                        command_options+=("(${exclusions// /|})"$option$ACTIONS)
-                    fi
-                done
-            done
-
-            break
-        fi
-    done
-
-    _nix_print "command arguments: "
-
-    _parse ':->main_command' \
-           ${command_arguments[*]} \
-           ${common_options[*]} \
-           ${command_options[*]} && return 0
-
-    # Handle argument completion based on the resulting state
-    case "$state" in
-        main_command)
-            COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
             return 0
             ;;
         arg-@(INSTALLABLES|INSTALLABLE|PACKAGE|DEPENDENCY))
@@ -1258,10 +1222,22 @@ function _nix () {
             COMPREPLY=($(compgen -W "${nix_options[*]}" -- $cur))
             ;;
         *)
-            _nix_print "$state not implemented"
+            _nix_print  "$state not implemented yet"
+            ;;
+
     esac
+    return 1
 }
-complete -F _nix nix
+# Set _nix_build to handle completion for nix-build
+ complete -F _nix_legacy \
+          nix-build nix-shell nix-env nix-store \
+          nix-channel nix-copy-closure nix-collect-garbage \
+          nix-hash nix-collect-garbage nix-instantiate \
+          nix-install-package nix-prefetch-url nix-push \
+          nixos-rebuild nixos-install nixos-version \
+          nixos-container nixos-generate-config nixos-build-vms \
+          nixops nix
+
 
 # Generate nix code creating the default expression used by 'nix-env -iA'
 _nix_gen_defexpr () {
