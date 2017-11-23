@@ -851,15 +851,16 @@ function _nix_completion () {
 
            local -a command_options=()
            local -a command_arguments=()
-           # Setup the correct command_arguments and command_options depending on which
-           # command we've typed
+           # Setup the correct command_arguments and command_options depending
+           # on which command we've typed
            local word
            for word in ${words[*]:1}; do
 
                # Check if we're in a valid command
                if [[ "${command_lookup[$word]}" == 1 ]]; then
                    # Extract an array describing the possible arguments to the
-                   # command eg. (NAR PATH) for cat-nar or (INSTALLABLES) for run
+                   # command eg. (NAR PATH) for cat-nar or (INSTALLABLES) for
+                   # run
                    local -a args=(
                        $(nix $word --help | sed -E \
                                                 -e '2,$d' \
@@ -887,16 +888,14 @@ function _nix_completion () {
                    local option option_spec
                    for option_spec in ${option_descriptions[*]}; do
 
-                       # Extract the options by stripping everything starting at '<'
-                       # (and ',')
-                       # local flags="${option_spec##<*/}"
-                       # local -a option_group=(${flags/,/ })
-
+                       # Extract the options by stripping everything up from the
+                       # first '<', and any ','
                        local -a option_group=($(echo "$option_spec" \
                                                     | sed -E \
                                                           -e 's=,= =' \
                                                           -e 's=<.*=='))
-                       # Extract any arguments, by stripping the options (and <|>)
+                       # Extract any arguments, by stripping the options, and
+                       # any '<' or '>'
                        local -a option_args=(
                            $(echo "$option_spec" \
                                  | sed -E \
@@ -912,14 +911,18 @@ function _nix_completion () {
                        done
 
                        for option in ${option_group[*]}; do
-                           # Handle `run --keep/--unset` manually as they can be repeated
-                           if [[ "$word" == run && "$option" == @(-k|--keep|-u|--unset) ]]; then
+                           # Handle `run --keep/--unset` manually as they can be
+                           # repeated
+                           if [[ "$word" == run \
+                              && "$option" == @(-k|--keep|-u|--unset) ]]; then
                                command_options+=("*${option}:->option-PARAMS")
-                           elif [[ "$option" == @(-I|--include|--arg|--argstr) ]]; then
+                           elif [[ "$option" \
+                                == @(-I|--include|--arg|--argstr) ]]; then
                                # Repeatable options
                                command_options+=("*${option}"$ACTIONS)
                            else
-                               # Default to mutually exclusive non-repeatable options
+                               # Default to mutually exclusive non-repeatable
+                               # options
                                local exclusions="${option_group[*]}"
                                command_options+=("(${exclusions// /|})"$option$ACTIONS)
                            fi
@@ -1066,11 +1069,6 @@ function _nix_completion () {
             COMPREPLY=($(compgen -W "${nixoptions[*]}" -- "$cur"))
             return
             ;;
-        file|nix_file)
-            compopt -o filenames
-            COMPREPLY=($(compgen -f -- "$cur"))
-            return
-            ;;
         directory)
             compopt -o filenames
             COMPREPLY=($(compgen -d -- "$cur"))
@@ -1135,7 +1133,7 @@ function _nix_completion () {
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
-        option-FILES)
+        option-FILES|file|nix_file)
             compopt -o filenames
             COMPREPLY=($(compgen -f -- $cur))
             return
