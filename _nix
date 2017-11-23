@@ -1007,24 +1007,6 @@ function _nix_legacy () {
             _nix_attr_paths "$defexpr_path"
             return 0
             ;;
-        option-PATH)
-            # --include <PATH> completion
-            if [[ "$cur" == *=* ]]; then
-                # This actually works due to bash's COMP_WORDBREAKS weirdness
-                compopt -o filenames
-                COMPREPLY=($(compgen -d -- ${cur#*=}))
-            else
-                local -a nixpath=(${NIX_PATH//:/ })
-                local -a path_names
-                local p
-                for p in ${nixpath[*]}; do
-                    [[ "$p" == *=* ]] && path_names+=(${p%=*})
-                done
-                compopt -o nospace
-                COMPREPLY=($(compgen -S "=" -W "${path_names[*]}" -- "$cur"))
-            fi
-            return
-            ;;
         nixoption)
             local -a nixoptions=(
                 'gc-keep-outputs' 'gc-keep-derivations'
