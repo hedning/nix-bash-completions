@@ -154,46 +154,39 @@ function _parse () {
                 completors+=(${action})
                 opt_queue=(${opt_queue[*]:1})
             fi
-        elif [[ "$word" == --* ]]; then
-            # Long option
-            _nix_print "Consume an option: $word ${options["$word"]}"
-            completors+=("$word")
-            local -a actions=(${options["$word"]//:/ })
-            # Register the flag being on the command line
-            opts[${word}]=1
-            # Check if actions contains an exclusion pattern
-            if [[ ${actions[0]} == *\# ]]; then
-                local prefix="${excluded_options:+|}"
-                # Don't add the exclusion glob if the current word is this option
-                [[ "$cword" != "$i" ]] \
-                    && excluded_options+="$prefix${actions[0]:0:-1}"
-                _nix_print "$word's exclusion group:" "$prefix${actions[0]:0:-1}"
-                actions=(${actions[*]:1})
-            fi
-            if [[ "${actions[*]}" ]]; then
-                current_option="$word"
-                # Add to the option argument queue
-                _nix_print  "option arguments: ${actions[*]}"
-                opt_queue=(${actions[*]})
-                _nix_print  "option queue: ${opt_queue[*]}"
-            fi
         elif [[ "$word" == -* ]]; then
-            # Short option, possibly stacked
-            _nix_print "Consume short options: $word ${options["$word"]}"
-            local flags=${word#-}
+            # Handle options
+            _nix_print "Consume option[s]: $word ${options[$word]}"
+
             completors+=("$word")
-            while [[ "$flags" ]]; do
-                local flag="-${flags:0:1}"
+
+            # Reset flags
+            local -a flags=()
+            if [[ "$word" == --* ]]; then
+                flags=("$word")
+            else
+                local letters=${word#-} j
+                for ((j=0; j < ${#letters}; j++)); do
+                    flags+=(-${letters:j:1})
+                done
+            fi
+
+            local flag=""
+            for flag in ${flags[*]}; do
                 # Register the flag being on the command line
                 opts[${flag}]=1
+
                 local -a actions=(${options["$flag"]//:/ })
                 # Check if actions contains an exclusion pattern
                 if [[ ${actions[0]} == *\# ]]; then
                     local prefix="${excluded_options:+|}"
-                    excluded_options+="$prefix${actions[0]:0:-1}"
+                    [[ "$cword" != "$i" || $flag == -? ]] \
+                        && excluded_options+="$prefix${actions[0]:0:-1}"
                     _nix_print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}" 
                     actions=(${actions[*]:1})
                 fi
+
+                # Add any option arguments to the queue
                 if [[ "${actions[*]}" ]]; then
                     current_option="$flag"
                     # Add to the option argument queue
@@ -201,7 +194,6 @@ function _parse () {
                     opt_queue=(${actions[*]})
                     _nix_print  "option queue: ${opt_queue[*]}"
                 fi
-                flags="${flags:1}"
             done
         else
             # Consume a regular argument
