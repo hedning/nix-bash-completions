@@ -568,11 +568,13 @@ function _nix_legacy () {
                 esac
             done
 
-            _parse ${command_options[*]} ${main_spec[*]} && return 0
+            _parse ${nix_boilerplate_opts[*]} ${command_options[*]} \
+                   ${main_spec[*]} && return 0
             ;;
         nix-channel)
             # nix-channel handling
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 '(-*)--add:->url:->channel_name' \
                 '(-*)--remove:->nix_channels' \
                 '(-*)--list' \
@@ -591,12 +593,14 @@ function _nix_legacy () {
             ;;
         nix-copy-closure)
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 '(--from)--to' '(--to)--from' '--sign' '--gzip' \
                 '--include-outputs' '(--use-substitutes -s)'{--use-substitutes,-s} \
                 ':_user_at_host' ':*->file' && return 0
             ;;
         nix-collect-garbage)
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 '(--delete-old|-d)'{--delete-old,-d} \
                 '--delete-older-than:->empty' \
                 ${nix_dry_run[*]} && return 0
@@ -604,6 +608,7 @@ function _nix_legacy () {
         nix-hash)
             local ig='--to-base16|--to-base32'
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 '(-*)--to-base16:->hash' \
                 '(-*)--to-base32:->hash' \
                 "($ig)--flat" \
@@ -623,6 +628,7 @@ function _nix_legacy () {
             ;;
         nix-install-package)
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 '--non-interactive' \
                 '(--profile|-p)'{--profile,-p}':->nix_profile' \
                 '--set' \
@@ -636,6 +642,7 @@ function _nix_legacy () {
             ;;
         nix-push)
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 '--dest:->directory' '(--none)--bzip2'\
                 '(--bzip2)--none' '--force' '--link'\
                 '(--manifest-path)--manifest'\
@@ -648,6 +655,7 @@ function _nix_legacy () {
                 'switch' 'boot' 'test' 'build' 'dry-build'
                 'dry-activate' 'build-vm' 'build-vm-with-bootloader')
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 ${nix_common_nixos_rebuild[*]} \
                 '--upgrade' '--install-grub' "--no-build-nix"             \
                 '--fast' '--rollback'                                     \
@@ -656,15 +664,18 @@ function _nix_legacy () {
             ;;
         nixos-install)
             _parse \
+                ${nix_boilerplate_opts[*]} \
                 $nix_search_path_args '--root:->directory'\
                 '--show-trace' '--chroot' && return 0
             ;;
         nixos-generate-config)
-            _parse '--no-filesystems' '--show-hardware-config' '--force'\
+            _parse ${nix_boilerplate_opts[*]} \
+                   '--no-filesystems' '--show-hardware-config' '--force'\
                    '--root:->directory' '--dir:->directory' && return 0
             ;;
         nixos-version)
-            _parse '(-*)'{--hash,--revision} && return 0
+            _parse ${nix_boilerplate_opts[*]} \
+                   '(-*)'{--hash,--revision} && return 0
             ;;
         nixos-container)
             main_commands=(
@@ -708,7 +719,7 @@ function _nix_legacy () {
             ;;
        nixos-build-vms)
            _parse '--show-trace' "--no-out-link" \
-                  ':->nix_file' \
+                  ':->nix_file' '--help'\
                && return 0
            ;;
 
