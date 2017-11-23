@@ -1199,7 +1199,7 @@ function _nix_completion () {
     esac
     return 1
 }
-# Set _nix_build to handle completion for nix-build
+# Set up the completion for all relevant commands
 complete -F _nix_completion \
           nix-build nix-shell nix-env nix-store \
           nix-channel nix-copy-closure nix-collect-garbage \
