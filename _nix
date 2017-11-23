@@ -387,22 +387,13 @@ function _nix_legacy () {
             for word in ${words[*]:1}; do
                 case "$word" in
                 --install|-*([a-zA-Z])i*([a-zA-Z]))
-                    local norm_arg=':*->installed_packages'
-                    # Check if -A is supplied on command line
-                    for word in ${words[*]:1}; do
-                        case $word in
-                            --attr|-*([a-zA-Z])A*([a-zA-Z]))
-                                norm_arg=':*->attr_path'
-                                ;;
-                        esac
-                    done
                     command_options=(
                         ${nix_env_common_opts[*]}
                         ${nix_env_b[*]} $nix_env_from_profile
                         '(--preserve-installed|-P)'{--preserve-installed,-P}
                         '(--remove-all|-r)'{--remove-all,-r}
                         '(-A|--attr)'{-A,--attr}
-                        "$norm_arg")
+                        ':*->installed_packages')
 
                     break
                     ;;
@@ -463,7 +454,11 @@ function _nix_legacy () {
 
             case "$state" in
                 installed_packages)
-                    if [[ "$cur" == @("./"*|/*|\~*) ]]; then
+                    if [[ (${opts[-i]} || ${opts[--install]}) \
+                       && (${opts[-A]} || ${opts[--attr]}) ]]; then
+                        # -iA means we should complete attribute paths
+                        state=attr_path
+                    elif [[ "$cur" == @("./"*|/*|\~*) ]]; then
                         # Complete files and return if we're entering files with
                         # absolute file syntax that nix will understand
                         state=file
