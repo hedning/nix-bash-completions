@@ -949,16 +949,55 @@ function _nix_legacy () {
             COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
             return
             ;;
+        arg-@(INSTALLABLES|INSTALLABLE|PACKAGE|DEPENDENCY))
+            if [[ "$cur" == @("./"*|/*|\~*) ]]; then
+                # Complete files and return if we're entering files with
+                # absolute file syntax that nix will understand
+                compopt -o nospace
+                COMPREPLY=($(compgen -f -- $cur))
+                return 0
+            fi
+            # Continue with the shared attr_path handling
+            ;&
         attr_path)
-            local defexpr_path=""
-            local file
-            if [[ ${words[0]} == nix-env ]]; then
-                if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
-                    # Assumes you only provide one -f/--file
-                    file=${opt_args[-f]}${opt_args[--file]}
-                else
-                    defexpr_path=$(_nix_gen_defexpr ~/.nix-defexpr)
-                fi
+            # Handle all the various way commands expects the top level
+            # expression being built
+            local defexpr="" file=""
+            if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
+                # Assumes you only provide one -f/--file
+                file=${opt_args[-f]}${opt_args[--file]}
+
+            elif [[ ${words[0]} == nix-env ]]; then
+                defexpr=$(_nix_gen_defexpr ~/.nix-defexpr)
+
+            elif [[ "${words[0]}" == nix ]]; then
+                # Fall back to completing available channels in the NIX_PATH
+
+                # Extract the channels from NIX_PATH and -I/--include
+                local -a channels=(${NIX_PATH[*]//:/ })
+                # Add -I/--include afterwards, so they will shadow the NIX_PATH
+                channels+=(${opt_args[-I]//:/ })
+                channels+=(${opt_args[--include]//:/ })
+
+                # Add the names in an associative array to avoid duplicates
+                local -A names
+                local channel name
+                for channel in ${channels[*]}; do
+                    name=${channel%%=*}
+                    if [[ "$name" != "$channel" ]]; then
+                        # Only add paths with a name, not sure how they work
+                        names[$name]=1
+                    fi
+                done
+
+                defexpr=$'{ '
+                for name in ${!names[*]}; do
+                    # nixos-config isn't useful or possible to complete
+                    [[ "$name" == nixos-config ]] && continue
+                    defexpr+="$name = import <${name}> {}; "
+                done
+                defexpr+=' }'
+
             elif [[ ${line[1]} ]]; then
                 file="${line[1]}"
             elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
@@ -968,7 +1007,7 @@ function _nix_legacy () {
             fi
 
             # Resolve files and urls
-            if [[ "$file" && -z "$defexpr_path" ]]; then
+            if [[ "$file" && -z "$defexpr" ]]; then
                 # dequote
                 file="$(dequote $file)"
                 __expand_tilde_by_ref file
@@ -1000,11 +1039,10 @@ function _nix_legacy () {
                     fi
                 fi
 
-                defexpr_path="import $file {}"
+                defexpr="import $file {}"
             fi
 
-            _nix_print  "defexpr: $defexpr_path" 
-            _nix_attr_paths "$defexpr_path"
+            _nix_attr_paths "$defexpr"
             return 0
             ;;
         legacy-option)
@@ -1047,70 +1085,6 @@ function _nix_legacy () {
                 COMPREPLY=($(cd $gcroot && compgen -P $gcroot -d -- ${cur#$gcroot}))
             fi
             return
-            ;;
-        arg-@(INSTALLABLES|INSTALLABLE|PACKAGE|DEPENDENCY))
-
-            if [[ "$cur" == @("./"*|/*|\~*) ]]; then
-                # Complete files and return if we're entering files with
-                # absolute file syntax that nix will understand
-                compopt -o nospace
-                COMPREPLY=($(compgen -f -- $cur))
-                return 0
-            fi
-
-            local defexpr=""
-            if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
-                # Assumes you only provide one -f/--file
-                local file=${opt_args[-f]}${opt_args[--file]}
-                file="$(dequote $file)"
-                __expand_tilde_by_ref file
-                if [[ -e "$file" ]]; then
-                    file=$(realpath "$file" 2>/dev/null)
-                elif [[ "$file" == @(https://*|channel:*) ]]; then
-                    # Resolve channel: syntax
-                    if [[ "$file" == channel:* ]]; then
-                        file="https://nixos.org/channels/"${file:8}"/nixexprs.tar.xz"
-                    fi
-                    local name="${file##*/}"
-                    local -a sha=($(printf "$name\0$file" | sha256sum -))
-                    local base=$(nix to-base32 --type sha256 ${sha[*]:0:1})
-                    local cache=${XDG_CACHE_HOME:-~/.cache}/nix/tarballs
-                    local link="$cache"/"$base"-file
-                    if [[ -e "$link" ]]; then
-                        file="$cache"/"$(basename $(readlink $link))"-unpacked
-                    fi
-                fi
-                defexpr="import $file {}"
-            else
-                # Fall back to completing available channels in the NIX_PATH
-
-                # Extract the channels from NIX_PATH and -I/--include
-                local -a channels=(${NIX_PATH[*]//:/ })
-                # Add -I/--include afterwards, so they will shadow the NIX_PATH
-                channels+=(${opt_args[-I]//:/ })
-                channels+=(${opt_args[--include]//:/ })
-
-                # Add the names in an associative array to avoid duplicates
-                local -A names
-                local channel name
-                for channel in ${channels[*]}; do
-                    name=${channel%%=*}
-                    if [[ "$name" != "$channel" ]]; then
-                        # Only add paths with a name, not sure how they work
-                        names[$name]=1
-                    fi
-                done
-
-                defexpr=$'{ '
-                for name in ${!names[*]}; do
-                    # nixos-config isn't useful or possible to complete
-                    [[ "$name" == nixos-config ]] && continue
-                    defexpr+="$name = import <${name}> {}; "
-                done
-                defexpr+=' }'
-            fi
-            _nix_attr_paths "$defexpr"
-            return 0
             ;;
         arg-@(PATH|PATHS|FILES|NAR))
             compopt -o filenames
