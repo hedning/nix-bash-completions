@@ -515,7 +515,7 @@ function _nix_legacy () {
                     --realise|-*([a-zA-Z])r*([a-zA-Z]))
                         command_options=(
                             ${nix_dry_run[*]}
-                            '--add-root:->directory' '--indirect'
+                            '--add-root:->gc-root' '--indirect'
                             '--ignore-unknown'
                             ':*->file')
                         break
@@ -621,7 +621,7 @@ function _nix_legacy () {
         nix-instantiate)
             _parse \
                 ${nix_boilerplate_opts[*]} \
-                ${nix_common_opts[*]} '--xml' '--json' '--add-root:->directory' \
+                ${nix_common_opts[*]} '--xml' '--json' '--add-root:->gc-root' \
                 '--indirect' '--parse' '--eval' "--find-file:*->file"\
                 '--strict' '--read-write-mode' ':*->file' && return 0
             ;;
@@ -950,12 +950,22 @@ function _nix_legacy () {
             ;;
         file|nix_file)
             compopt -o filenames
-            COMPREPLY=($(compgen -f $cur))
+            COMPREPLY=($(compgen -f -- "$cur"))
             return
             ;;
         directory)
             compopt -o filenames
-            COMPREPLY=($(compgen -d $cur))
+            COMPREPLY=($(compgen -d -- "$cur"))
+            return
+            ;;
+        gc-root)
+            compopt -o filenames
+            if [[ "$cur" || "${opts[--indirect]}" ]]; then
+               COMPREPLY=($(compgen -d -- $cur))
+            else
+                local gcroot=/nix/var/nix/gcroots/
+                COMPREPLY=($(cd $gcroot && compgen -P $gcroot -d -- ${cur#$gcroot}))
+            fi
             return
             ;;
         hash_algo)
