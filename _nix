@@ -1090,11 +1090,6 @@ function _nix_completion () {
             COMPREPLY=($(compgen -W "${nixoptions[*]}" -- "$cur"))
             return
             ;;
-        directory)
-            compopt -o filenames
-            COMPREPLY=($(compgen -d -- "$cur"))
-            return
-            ;;
         gc-root)
             compopt -o filenames
             if [[ "$cur" || "${opts[--indirect]}" ]]; then
@@ -1110,7 +1105,7 @@ function _nix_completion () {
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
-        option-STORE-URI)
+        option-STORE-URI|directory)
             ## Not sure how to present alternatives here
             compopt -o filenames
             COMPREPLY=($(compgen -d -- $cur))
@@ -1118,6 +1113,7 @@ function _nix_completion () {
             ;;
         option-COMMAND)
             COMPREPLY=($(compgen -c -- $cur))
+            return
             ;;
         option-FILE)
             if [[ "$cur" == channel:* ]]; then
@@ -1150,6 +1146,7 @@ function _nix_completion () {
             ;;
         option-PARAMS)
             COMPREPLY=($(compgen -v -- $cur))
+            return
             ;;
         option-PATH)
             # --include <PATH> completion
@@ -1176,6 +1173,7 @@ function _nix_completion () {
                                                    -e '/^$/d' \
                                                    -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
             COMPREPLY=($(compgen -W "${nix_options[*]}" -- $cur))
+            return
             ;;
         *|arg-REGEX|arg-STRINGS|option-NAME|option-EXPR|option-STRING)
             _nix_print  "$state not implemented yet"
