@@ -48,7 +48,9 @@ The `[*]_function_` spec causes `_function` to be called, making it handle compl
 
 An example using the different actions:
 ```shell
+local state
 local -a line
+local -A opt_args opts
 _parse ':_known_hosts' ':*->FILE' && return
 case "$state" in
     FILE)
@@ -67,12 +69,13 @@ Which tells `_parse` to add `--option` when completing options.
 
 If the option is present on the command line further option completion will exclude options matching any of the `pattern`s. By default `--option` will exclude itself. If we want an option to be repeatable we add the `*` prefix to the option.
 
-Adding actions to an option spec tells `_parse` that the option takes arguments. These actions are specified in the exact same way as the argument spec. Option arguments can be looked up in the `$opt_args` associative array using the option as a key.
+Adding actions to an option spec tells `_parse` that the option takes arguments. These actions are specified in the exact same way as the argument spec. Option arguments can later be looked up in the `$opt_args` associative array using the option as a key. The presence of __any__ option can be checked with `${opts[option]}`.
 
 A reduced version of `nix-shell` spec:
 ```shell
+local state
 local -a line
-local -A opt_args
+local -A opt_args opts
 _parse ':*->FILE' '(--attr|-A)'{--attr,-A}':->ATTR_PATH' \
        '(--packages|-p|shell)'{--packages,-p}':*->PACKAGE_ATTR_PATH') && return
 case "$state"
