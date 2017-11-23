@@ -595,7 +595,7 @@ function _nix_legacy () {
                 "($ig)--flat" \
                 "($ig)--base32" \
                 "($ig)--truncate" \
-                "($ig)--type:->hash_algo" \
+                "($ig)--type:->option-TYPE" \
                 ":*->file" && return 0
 
             # TODO: Don't add file completion if we're using anything in $ig
@@ -619,7 +619,7 @@ function _nix_legacy () {
             ;;
         nix-prefetch-url)
             _parse \
-                '--type:->hash_algo' ':->url' ':->empty' && return 0
+                '--type:->option-TYPE' ':->url' ':->empty' && return 0
             ;;
         nix-push)
             _parse \
@@ -1047,10 +1047,6 @@ function _nix_legacy () {
                 COMPREPLY=($(cd $gcroot && compgen -P $gcroot -d -- ${cur#$gcroot}))
             fi
             return
-            ;;
-        hash_algo)
-            COMPREPLY=($(compgen -W "md5 sha1 sha256 sha512" -- "$cur"))
-            return 0
             ;;
         arg-@(INSTALLABLES|INSTALLABLE|PACKAGE|DEPENDENCY))
 
