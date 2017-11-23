@@ -138,8 +138,8 @@ function _parse () {
     # Reset all output variables
     line=() opts=() opt_args=() state=""
 
-    local word=""
-    for i in $(seq 0 ${#words[*]}); do
+    local word="" i
+    for ((i=0; i < ${#words[*]}; i++)); do
         word=${words[$i]}
         if [[ "${opt_queue[*]}" ]]; then
             # Consume an option argument
