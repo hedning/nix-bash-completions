@@ -135,10 +135,10 @@ function _parse () {
     local excluded_options=""
     # The list of completors corresponding to each word in words
     local completors=()
-    line=()
+    # Reset all output variables
+    line=() opts=() opt_args=() state=""
 
     local word=""
-    opt_args=()
     for i in $(seq 0 ${#words[*]}); do
         word=${words[$i]}
         if [[ "${opt_queue[*]}" ]]; then
