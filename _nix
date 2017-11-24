@@ -1141,7 +1141,8 @@ function _nix_completion () {
                 return
             fi
             compopt -o filenames
-            COMPREPLY=($(compgen -f -- $cur))
+            COMPREPLY=($(compgen -d -- "$cur"))
+            COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
             return
             ;;
         option-FILES|option-PATH|file|nix_file)
