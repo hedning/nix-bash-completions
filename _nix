@@ -142,7 +142,7 @@ function _parse () {
             # Consume an option argument
             _nix_print "consume option queue: $word ${opt_queue[0]}"
             local separator=${opt_args["$current_option"]:+:}
-            opt_args["$current_option"]+=$separator"${word//:/\\:}"
+            opt_args["$current_option"]+=$separator${word//:/\\:}
 
             local action="${opt_queue[0]}"
             if [[ "$action" == \** ]]; then
@@ -975,6 +975,8 @@ function _nix_completion () {
                 file=${opt_args[-f]}$seperator${opt_args[--file]}
                 # Take the last file input we see, --file takes precedent over -f
                 file=${file##*!(\\):}
+                # Debacklash any ':'
+                file=${file//\\:/:}
 
             elif [[ ${words[0]} == nix-env ]]; then
                 # Generate nix code creating the default expression used by
