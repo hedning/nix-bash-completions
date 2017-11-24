@@ -1153,10 +1153,12 @@ function _nix_completion () {
             if [[ "$cur" == @(/*|./*|~/*) ]]; then
                 compopt -o filenames
                 COMPREPLY=($(compgen -d -- "$cur"))
+                COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
             elif [[ "$cur" == *=* ]]; then
                 # This actually works due to bash's COMP_WORDBREAKS weirdness
                 compopt -o filenames
                 COMPREPLY=($(compgen -d -- "${cur#*=}"))
+                COMPREPLY+=($(compgen -X "!*.nix" -f -- "${cur#*=}"))
             else
                 local -a nixpath=(${NIX_PATH//:/ })
                 local -a path_names
