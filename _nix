@@ -309,7 +309,7 @@ function _nix_completion () {
                 '--drv-link:->empty' '--add-drv-link'
                 '--no-out-link'
                 {--out-link,-o}':->empty')
-            _parse ':*->file' ${nix_common_opts[*]} \
+            _parse ':*->nix_file' ${nix_common_opts[*]} \
                    ${nix_boilerplate_opts[*]} \
                    ${nix_build_opts[*]} && return 0
             ;;
@@ -332,7 +332,7 @@ function _nix_completion () {
                     _nix_attr_paths "import <nixpkgs>"
                     return 0
                 else
-                    state=file
+                    state=nix_file
                 fi
             fi
             ;;
@@ -356,7 +356,7 @@ function _nix_completion () {
 
             local -a nix_env_common_opts=(
                     ${nix_common_opts[*]}
-                    '(--file|-f)'{--file,-f}':->file'
+                    '(--file|-f)'{--file,-f}':->nix_file'
                     '(--profile|-p)'{--profile,-p}':->profile'
                     $nix_dry_run
                     '--system-filter[Only show derivations matching the specified platform]:system:_nix_systems')
@@ -604,8 +604,8 @@ function _nix_completion () {
             _parse \
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_opts[*]} '--xml' '--json' '--add-root:->gc-root' \
-                '--indirect' '--parse' '--eval' "--find-file:*->file"\
-                '--strict' '--read-write-mode' ':*->file' && return 0
+                '--indirect' '--parse' '--eval' "--find-file:*->nix_file"\
+                '--strict' '--read-write-mode' ':*->nix_file' && return 0
             ;;
         nix-install-package)
             _parse \
@@ -1108,7 +1108,7 @@ function _nix_completion () {
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
-        arg-FILES)
+        arg-FILES|nix_file)
             compopt -o filenames
             COMPREPLY=($(compgen -d -- "$cur"))
             COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
@@ -1145,7 +1145,7 @@ function _nix_completion () {
             COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
             return
             ;;
-        option-FILES|option-PATH|file|nix_file)
+        option-FILES|option-PATH|file)
             compopt -o filenames
             COMPREPLY=($(compgen -f -- $cur))
             return
