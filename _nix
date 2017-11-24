@@ -1103,9 +1103,15 @@ function _nix_completion () {
             fi
             return
             ;;
-        arg-@(PATH|PATHS|FILES|NAR))
+        arg-@(PATH|PATHS|NAR))
             compopt -o filenames
             COMPREPLY=($(compgen -f -- $cur))
+            return
+            ;;
+        arg-FILES)
+            compopt -o filenames
+            COMPREPLY=($(compgen -d -- "$cur"))
+            COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
             return
             ;;
         option-STORE-URI|directory)
