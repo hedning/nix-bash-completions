@@ -252,7 +252,7 @@ function _nix_completion () {
 
     local nix_repair='--repair';
 
-    local nix_search_path_args='-I:->option-PATH'
+    local nix_search_path_args='-I:->option-INCLUDE'
 
     # Misc Nix options accepted by nixos-rebuild
     local -a nix_common_nixos_rebuild=(
@@ -720,7 +720,7 @@ function _nix_completion () {
                '--confirm' '--debug')
            local -a nixops_include_exclude=(
                '--include:_known_hosts' '--exclude:_known_hosts')
-           local -a nixops_search_path_args=('-I:->option-PATH')
+           local -a nixops_search_path_args=('-I:->option-INCLUDE')
 
 
            local -a command_options=()
@@ -916,8 +916,11 @@ function _nix_completion () {
                            if [[ "$word" == run \
                               && "$option" == @(-k|--keep|-u|--unset) ]]; then
                                command_options+=("*${option}:->option-PARAMS")
-                           elif [[ "$option" \
-                                == @(-I|--include|--arg|--argstr) ]]; then
+                           elif [[ "$option" == @(-I|--include) ]]; then
+                               # Special handling of --include due to type
+                               # ambiguity
+                               command_options+=("*${option}:->option-INCLUDE")
+                           elif [[ "$option" == @(--arg|--argstr) ]]; then
                                # Repeatable options
                                command_options+=("*${option}"$ACTIONS)
                            else
@@ -1135,7 +1138,7 @@ function _nix_completion () {
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
-        option-FILES|file|nix_file)
+        option-FILES|option-PATH|file|nix_file)
             compopt -o filenames
             COMPREPLY=($(compgen -f -- $cur))
             return
@@ -1148,7 +1151,7 @@ function _nix_completion () {
             COMPREPLY=($(compgen -v -- $cur))
             return
             ;;
-        option-PATH)
+        option-INCLUDE)
             # --include <PATH> completion
             if [[ "$cur" == @(/*|./*|~/*) ]]; then
                 compopt -o filenames
