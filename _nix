@@ -1004,13 +1004,15 @@ function _nix_completion () {
             # expression being built
             local defexpr="" file=""
             if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
-                local seperator=""
-                [[ "${opt_args[-f]}" && "${opt_args[--file]}" ]] && seperator=:
-                file=${opt_args[-f]}$seperator${opt_args[--file]}
-                # Take the last file input we see, --file takes precedent over -f
-                file=${file##*!(\\):}
-                # Debacklash any ':'
-                file=${file//\\:/:}
+                local i
+                # Extract the last seen -f/--file argument
+                for ((i=1; i < ${#words[*]}; i++)); do
+                    case "${words[i]}" in
+                        --file|-f)
+                            file=${words[$((i+1))]}
+                        ;;
+                    esac
+                done
 
             elif [[ ${words[0]} == nix-env ]]; then
                 # Generate nix code creating the default expression used by
