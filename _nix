@@ -390,7 +390,6 @@ function _nix_completion () {
 
             local -a nix_env_common_opts=(
                     ${nix_common_opts[*]}
-                    '*'{--file,-f}':->nix_file'
                     '(--profile|-p)'{--profile,-p}':->profile'
                     $nix_dry_run
                     '--system-filter:->nix-system')
@@ -465,6 +464,7 @@ function _nix_completion () {
             done
 
             _parse ${command_options[*]} \
+                   '*'{--file,-f}':->nix_file' \
                    ${nix_boilerplate_opts} ${main_spec[*]} && return 0
 
             case "$state" in
