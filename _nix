@@ -1174,25 +1174,30 @@ function _nix_completion () {
             ;;
         option-INCLUDE)
             # --include <PATH> completion
-            if [[ "$cur" == @(/*|./*|~/*) ]]; then
-                compopt -o filenames
-                COMPREPLY=($(compgen -d -- "$cur"))
-                COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
-            elif [[ "$cur" == *=* ]]; then
-                # This actually works due to bash's COMP_WORDBREAKS weirdness
-                compopt -o filenames
-                COMPREPLY=($(compgen -d -- "${cur#*=}"))
-                COMPREPLY+=($(compgen -X "!*.nix" -f -- "${cur#*=}"))
-            else
-                local -a nixpath=(${NIX_PATH//:/ })
-                local -a path_names
-                local p
-                for p in ${nixpath[*]}; do
-                    [[ "$p" == *=* ]] && path_names+=(${p%=*})
-                done
-                compopt -o nospace
-                COMPREPLY=($(compgen -S "=" -W "${path_names[*]}" -- "$cur"))
-            fi
+            case "$cur" in
+                /*|./*|~/*)
+                    compopt -o filenames
+                    COMPREPLY=($(compgen -d -- "$cur"))
+                    COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
+                    ;;
+                *=*)
+                    # This actually works due to bash's COMP_WORDBREAKS
+                    # weirdness
+                    compopt -o filenames
+                    COMPREPLY=($(compgen -d -- "${cur#*=}"))
+                    COMPREPLY+=($(compgen -X "!*.nix" -f -- "${cur#*=}"))
+                    ;;
+                *)
+                    local -a nixpath=(${NIX_PATH//:/ })
+                    local -a path_names
+                    local p
+                    for p in ${nixpath[*]}; do
+                        [[ "$p" == *=* ]] && path_names+=(${p%=*})
+                    done
+                    compopt -o nospace
+                    COMPREPLY=($(compgen -S "=" -W "${path_names[*]}" -- "$cur"))
+                    ;;
+            esac
             return
             ;;
         nixoption)
