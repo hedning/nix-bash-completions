@@ -1047,7 +1047,9 @@ function _nix_completion () {
 
                 # Extract the channels from NIX_PATH and -I/--include
                 local -a channels=(${NIX_PATH[*]//:/ })
-                # Add -I/--include afterwards, so they will shadow the NIX_PATH
+                # The order doesn't matter as we're only using the names
+                # This will also split eg. htttp://some/path, but we'll we'll
+                # throw those elements away since they don't contain a '='
                 channels+=(${opt_args[-I]//:/ })
                 channels+=(${opt_args[--include]//:/ })
 
