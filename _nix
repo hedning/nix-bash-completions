@@ -28,6 +28,17 @@ function _nix_attr_paths () {
     override=${override//\\:/:}
     override+=${opt_args[-I]:+:}${NIX_PATH}
 
+    # Resolve any url to a cache, else we might trigger a blocking download
+    while [[ "$override" == *https://* ]]; do
+        # Find the first url
+        local url=${override#*https://}
+        # Strip everything starting with the first colon
+        url="https://"${url%%:*}
+        local cache=$(_nix_resolve_url "$url")
+        # Replace the url with the cache
+        override=${override/"$url"/"$cache"}
+    done
+
     # Get all the attribute names in $attr_path
     # prefix with 'top' as we let 'top = $defexpr' in NIX_FILE, where
     # 'builtins.attrNames $prefixed_path' is being run
@@ -51,6 +62,28 @@ NIX_FILE
                           -- ${cur##*.}))
 }
 
+# Resolve any urls ourselves, as nix will start downloading and block
+# interaction if it's left to its own devices
+function _nix_resolve_url () {
+    local -a sha
+    local url=$1
+    local version="$(${words[0]} --version)"
+    if [[ "${version##* }" == 1.11.* ]]; then
+        # works for nix 1.11
+        sha=($(printf "$url" | sha256sum -))
+    else
+        # works for nix 1.12
+        local name="${url##*/}"
+        sha=($(printf "$name\0$url" | sha256sum -))
+    fi
+    local base=$(nix-hash --to-base32 --type sha256 \
+                          ${sha[*]:0:1})
+    local cache=${XDG_CACHE_HOME:-~/.cache}/nix/tarballs
+    local link="$cache"/"$base"-file
+    if [[ -e "$link" ]]; then
+        echo "$cache/$(basename $(readlink $link))-unpacked"
+    fi
+}
 
 function _parse () {
     # Takes in `spec ...` and parses the command line using it
@@ -1052,26 +1085,9 @@ function _nix_completion () {
                 __expand_tilde_by_ref file
                 if [[ -e "$file" ]]; then
                     file=$(realpath "$file" 2>/dev/null)
-
-                # Check the cache to resolve urls
                 elif [[ "$file" == https://* ]]; then
-                    local -a sha
-                    local version="$(${words[0]} --version)"
-                    if [[ "${version##* }" == 1.11.* ]]; then
-                        # works for nix 1.11
-                        sha=($(printf "$file" | sha256sum -))
-                    else
-                        # works for nix 1.12
-                        local name="${file##*/}"
-                        sha=($(printf "$name\0$file" | sha256sum -))
-                    fi
-                    local base=$(nix-hash --to-base32 --type sha256 \
-                                          ${sha[*]:0:1})
-                    local cache=${XDG_CACHE_HOME:-~/.cache}/nix/tarballs
-                    local link="$cache"/"$base"-file
-                    if [[ -e "$link" ]]; then
-                        file="$cache"/"$(basename $(readlink $link))"-unpacked
-                    fi
+                    # Check the cache to resolve urls
+                    file=$(_nix_resolve_url "$file")
                 fi
 
                 defexpr="import $file {}"
