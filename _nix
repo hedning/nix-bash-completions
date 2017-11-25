@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+# Include this to get shell-script-mode to detect bash
+
 function _nix_print () {
     return 0 # Comment out to turn on print debugging
     while [[ "$1" ]]; do
