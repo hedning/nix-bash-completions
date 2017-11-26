@@ -652,7 +652,7 @@ function _nix_completion () {
             _parse \
                 ${nix_boilerplate_opts[*]} '(--expr|-E)'{--expr,-E} \
                 ${nix_common_opts[*]} '--xml' '--json' '--add-root:->gc-root' \
-                '--indirect' '--parse' '--eval' "--find-file:*->nix_file"\
+                '--indirect' '--parse' '--eval' "(-*)--find-file:*->nix-path-file"\
                 '--strict' '--read-write-mode' ':*->file-or-expr' && return 0
             ;;
         nix-install-package)
