@@ -359,7 +359,7 @@ function _nix_completion () {
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
             '(--attr|-A)*'{--attr,-A}':->attr_path'
-            '*--arg:->empty:->empty' '*--argstr:->empty:->empty'
+            '*--arg:->function-arg:->empty' '*--argstr:->function-arg:->empty'
             '--max-silent-time:->empty'
             '--timeout:->empty'
             '--readonly-mode'
@@ -1007,6 +1007,11 @@ function _nix_completion () {
                            if [[ "$word" == run \
                               && "$option" == @(-k|--keep|-u|--unset) ]]; then
                                command_options+=("*${option}:->option-PARAMS")
+                           elif [[ "$word" == add-to-store \
+                                       && "$option" == @(-n|--name) ]]; then
+                                # Another <NAME> ambiguity
+                                local exclusions="${option_group[*]}"
+                                command_options+=("(${exclusions// /|})${option}:->store-name")
                            elif [[ "$option" == @(-I|--include) ]]; then
                                # Special handling of --include due to type
                                # ambiguity
@@ -1146,6 +1151,19 @@ function _nix_completion () {
             _nix_print defexpr: "$defexpr"
             _nix_attr_paths "$defexpr"
             return 0
+            ;;
+        function-arg|option-NAME)
+            local file=$(_nix_get_file_arg)
+            local -a names=($(nix-instantiate --eval - <<NIX_FILE 2> /dev/null \
+                                  | tr '"[]' ' '
+                  let
+                    args = builtins.functionArgs (import $file);
+                  in
+                    builtins.attrNames args
+NIX_FILE
+                              ))
+            COMPREPLY=($(compgen -W "${names[*]}" -- "$cur"))
+            return
             ;;
         file-or-expr)
             if [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
