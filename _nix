@@ -1017,72 +1017,17 @@ function _nix_completion () {
         attr_path)
             # Handle all the various way commands expects the top level
             # expression being built
-            local defexpr="" file=""
-            if [[ "${opt_args[-f]}" || "${opt_args[--file]}" ]]; then
+            local file=""
+            if [[ "${words[0]}" == @(nix-env|nix) ]]; then
                 local i
                 # Extract the last seen -f/--file argument
                 for ((i=1; i < ${#words[*]}; i++)); do
                     case "${words[i]}" in
                         --file|-f)
                             file=${words[$((i+1))]}
-                        ;;
+                            ;;
                     esac
                 done
-
-            elif [[ ${words[0]} == nix-env ]]; then
-                # Generate nix code creating the default expression used by
-                # 'nix-env -iA'
-                local -a result
-                local -a queue=(~/.nix-defexpr)
-                while [[ ${#queue[*]} > 0 ]]; do
-                    local current="${queue[0]}"
-                    queue=(${queue[*]:1})
-                    if [[ -e "$current/default.nix" ]]; then
-                        result+=($current)
-                    else
-                        local -a children=($(echo "$current"/*))
-                        if [[ "$children" != *\* ]]; then
-                            queue+=(${children[*]})
-                        fi
-                    fi
-                done
-
-                defexpr="{ "
-                for p in ${result[*]}; do
-                    defexpr+="$(basename $p) = import $p {}; "
-                done
-                defexpr+="}"
-
-            elif [[ "${words[0]}" == nix ]]; then
-                # Fall back to completing available channels in the NIX_PATH
-
-                # Extract the channels from NIX_PATH and -I/--include
-                local -a channels=(${NIX_PATH[*]//:/ })
-                # The order doesn't matter as we're only using the names
-                # This will also split eg. htttp://some/path, but we'll we'll
-                # throw those elements away since they don't contain a '='
-                channels+=(${opt_args[-I]//:/ })
-                channels+=(${opt_args[--include]//:/ })
-
-                # Add the names in an associative array to avoid duplicates
-                local -A names
-                local channel name
-                for channel in ${channels[*]}; do
-                    name=${channel%%=*}
-                    if [[ "$name" != "$channel" ]]; then
-                        # Only add paths with a name, not sure how they work
-                        names[$name]=1
-                    fi
-                done
-
-                defexpr=$'{ '
-                for name in ${!names[*]}; do
-                    # nixos-config isn't useful or possible to complete
-                    [[ "$name" == nixos-config ]] && continue
-                    defexpr+="$name = import <${name}> {}; "
-                done
-                defexpr+=' }'
-
             elif [[ ${line[1]} ]]; then
                 file="${line[1]}"
             elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
@@ -1091,8 +1036,9 @@ function _nix_completion () {
                 file="default.nix"
             fi
 
+            local defexpr=""
             # Resolve files and urls
-            if [[ "$file" && -z "$defexpr" ]]; then
+            if [[ "$file" ]]; then
 
                 # Expand channel: syntax
                 if [[ "$file" == channel:* ]]; then
@@ -1129,6 +1075,65 @@ function _nix_completion () {
                 done
 
                 defexpr="import $file {$args}"
+            fi
+
+            # If there's no file input, generate the default top level
+            # expressions for nix-env or nix
+            if [[ -z "$defexpr" ]]; then
+                if [[ ${words[0]} == nix-env ]]; then
+                    # Generate nix code creating the default expression used by
+                    # 'nix-env -iA'
+                    local -a result
+                    local -a queue=(~/.nix-defexpr)
+                    while [[ ${#queue[*]} > 0 ]]; do
+                        local current="${queue[0]}"
+                        queue=(${queue[*]:1})
+                        if [[ -e "$current/default.nix" ]]; then
+                            result+=($current)
+                        else
+                            local -a children=($(echo "$current"/*))
+                            if [[ "$children" != *\* ]]; then
+                                queue+=(${children[*]})
+                            fi
+                        fi
+                    done
+
+                    defexpr="{ "
+                    for p in ${result[*]}; do
+                        defexpr+="$(basename $p) = import $p {}; "
+                    done
+                    defexpr+="}"
+
+                elif [[ "${words[0]}" == nix ]]; then
+                    # Fall back to completing available channels in the NIX_PATH
+
+                    # Extract the channels from NIX_PATH and -I/--include
+                    local -a channels=(${NIX_PATH[*]//:/ })
+                    # The order doesn't matter as we're only using the names
+                    # This will also split eg. htttp://some/path, but we'll we'll
+                    # throw those elements away since they don't contain a '='
+                    channels+=(${opt_args[-I]//:/ })
+                    channels+=(${opt_args[--include]//:/ })
+
+                    # Add the names in an associative array to avoid duplicates
+                    local -A names
+                    local channel name
+                    for channel in ${channels[*]}; do
+                        name=${channel%%=*}
+                        if [[ "$name" != "$channel" ]]; then
+                            # Only add paths with a name, not sure how they work
+                            names[$name]=1
+                        fi
+                    done
+
+                    defexpr=$'{ '
+                    for name in ${!names[*]}; do
+                        # nixos-config isn't useful or possible to complete
+                        [[ "$name" == nixos-config ]] && continue
+                        defexpr+="$name = import <${name}> {}; "
+                    done
+                    defexpr+=' }'
+                fi
             fi
 
             _nix_print defexpr: "$defexpr"
