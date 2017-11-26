@@ -316,7 +316,7 @@ function _nix_completion () {
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
             '(--attr|-A)*'{--attr,-A}':->attr_path' '(--expr|-E)'{--expr,-E}
-            '--arg:->empty:->empty' '--argstr:->empty:->empty'
+            '*--arg:->empty:->empty' '*--argstr:->empty:->empty'
             '--max-silent-time:->empty'
             '--timeout:->empty'
             '--readonly-mode'
@@ -845,8 +845,8 @@ function _nix_completion () {
                        ;;
                    set-args)
                        main_options=(
-                           '--arg:->arg_name:->arg_value'
-                           '--argstring:->arg_name:->arg_value'
+                           '*--arg:->arg_name:->arg_value'
+                           '*--argstring:->arg_name:->arg_value'
                            '--unset:->empty')
                        break
                        ;;
