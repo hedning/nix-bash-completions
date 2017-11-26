@@ -97,6 +97,49 @@ function _nix_resolve_url () {
     fi
 }
 
+# Get the correct file like argument from the command line
+function _nix_get_file_arg () {
+    local file=""
+    if [[ "${words[0]}" == @(nix-env|nix) ]]; then
+        local i
+        # Extract the last seen -f/--file argument
+        for ((i=1; i < ${#words[*]}; i++)); do
+            case "${words[i]}" in
+                --file|-f)
+                    file=${words[$((i+1))]}
+                    ;;
+            esac
+        done
+    elif [[ ${line[1]} ]]; then
+        file="${line[1]}"
+    elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
+        file="shell.nix"
+    elif [[ -e default.nix ]]; then
+        file="default.nix"
+    fi
+
+    # Resolve files and urls
+    if [[ "$file" ]]; then
+
+        # Expand channel: syntax
+        if [[ "$file" == channel:* ]]; then
+            file="https://nixos.org/channels/"${file:8}"/nixexprs.tar.xz"
+        fi
+
+        # dequote
+        file="$(dequote $file)"
+        __expand_tilde_by_ref file
+        if [[ -e "$file" ]]; then
+            file=$(realpath "$file" 2>/dev/null)
+        elif [[ "$file" == https://* ]]; then
+            # Check the cache to resolve urls
+            file=$(_nix_resolve_url "$file")
+        fi
+
+    fi
+    printf -- "$file"
+}
+
 function _parse () {
     # Takes in `spec ...` and parses the command line using it
     # See README.md for more in depth explanation of the syntax
@@ -1017,44 +1060,10 @@ function _nix_completion () {
         attr_path)
             # Handle all the various way commands expects the top level
             # expression being built
-            local file=""
-            if [[ "${words[0]}" == @(nix-env|nix) ]]; then
-                local i
-                # Extract the last seen -f/--file argument
-                for ((i=1; i < ${#words[*]}; i++)); do
-                    case "${words[i]}" in
-                        --file|-f)
-                            file=${words[$((i+1))]}
-                            ;;
-                    esac
-                done
-            elif [[ ${line[1]} ]]; then
-                file="${line[1]}"
-            elif [[ -e shell.nix && "${words[0]}" == nix-shell ]]; then
-                file="shell.nix"
-            elif [[ -e default.nix ]]; then
-                file="default.nix"
-            fi
 
             local defexpr=""
-            # Resolve files and urls
+            local file=$(_nix_get_file_arg)
             if [[ "$file" ]]; then
-
-                # Expand channel: syntax
-                if [[ "$file" == channel:* ]]; then
-                    file="https://nixos.org/channels/"${file:8}"/nixexprs.tar.xz"
-                fi
-
-                # dequote
-                file="$(dequote $file)"
-                __expand_tilde_by_ref file
-                if [[ -e "$file" ]]; then
-                    file=$(realpath "$file" 2>/dev/null)
-                elif [[ "$file" == https://* ]]; then
-                    # Check the cache to resolve urls
-                    file=$(_nix_resolve_url "$file")
-                fi
-
                 # Extract --arg and --argstr into $args
                 local i=1 args="" name="" value=""
                 for ((i=1; i < ${#words[*]}; i++)); do
@@ -1075,12 +1084,10 @@ function _nix_completion () {
                 done
 
                 defexpr="import $file {$args}"
-            fi
-
+            else
             # If there's no file input, generate the default top level
             # expressions for nix-env or nix
-            if [[ -z "$defexpr" ]]; then
-                if [[ ${words[0]} == nix-env ]]; then
+                if [[ "${words[0]}" == nix-env ]]; then
                     # Generate nix code creating the default expression used by
                     # 'nix-env -iA'
                     local -a result
