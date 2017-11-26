@@ -1106,10 +1106,29 @@ function _nix_completion () {
                     file=$(_nix_resolve_url "$file")
                 fi
 
-                defexpr="import $file {}"
+                # Extract --arg and --argstr into $args
+                local i=1 args="" name="" value=""
+                for ((i=1; i < ${#words[*]}; i++)); do
+                    case "${words[$i]}" in
+                        --arg)
+                            name=$(dequote ${words[$((i+1))]})
+                            value=$(dequote ${words[$((i+2))]})
+                            args+="$name = $value;"
+                            i=$((i+2))
+                            ;;
+                        --argstr)
+                            name=$(dequote ${words[$((i+1))]})
+                            value=$(dequote ${words[$((i+2))]})
+                            args+="$name = \"$value\";"
+                            i=$((i+2))
+                            ;;
+                    esac
+                done
+
+                defexpr="import $file {$args}"
             fi
 
-            _nix_attr_paths "$defexpr"
+            _nix_print defexpr: "$defexpr"
             return 0
             ;;
         legacy-option)
