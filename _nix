@@ -355,9 +355,17 @@ function _nix_completion () {
                 '--drv-link:->empty' '--add-drv-link'
                 '--no-out-link'
                 {--out-link,-o}':->empty')
-            _parse ':*->nix_file' ${nix_common_opts[*]} \
+            _parse ':*->file-or-expr' ${nix_common_opts[*]} \
                    ${nix_boilerplate_opts[*]} \
                    ${nix_build_opts[*]} && return 0
+
+            if [[ "$state" == file-or-expr ]]; then
+                if [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
+                    state=expr
+                else
+                    state=nix_file
+                fi
+            fi
             ;;
         nix-shell)
             local -a nix_shell_opts=(
@@ -374,9 +382,11 @@ function _nix_completion () {
                    ${nix_shell_opts[*]} && return 0
 
             if [[ "$state" == package_attr_path ]]; then
-                if [[ ${opts[--packages]} || ${opts[-p]} ]]; then
+                if [[ "${opts[--packages]}" || "${opts[-p]}" ]]; then
                     _nix_attr_paths "import <nixpkgs>"
                     return 0
+                elif [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
+                    state=expr
                 else
                     state=nix_file
                 fi
@@ -651,7 +661,14 @@ function _nix_completion () {
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_opts[*]} '--xml' '--json' '--add-root:->gc-root' \
                 '--indirect' '--parse' '--eval' "--find-file:*->nix_file"\
-                '--strict' '--read-write-mode' ':*->nix_file' && return 0
+                '--strict' '--read-write-mode' ':*->file-or-expr' && return 0
+            if [[ "$state" == file-or-expr ]]; then
+                if [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
+                    state=expr
+                else
+                    state=nix_file
+                fi
+            fi
             ;;
         nix-install-package)
             _parse \
