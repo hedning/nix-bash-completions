@@ -1216,12 +1216,6 @@ NIX_FILE
             COMPREPLY=($(compgen -f -- $cur))
             return
             ;;
-        arg-FILES|nix_file)
-            compopt -o filenames
-            COMPREPLY=($(compgen -d -- "$cur"))
-            COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
-            return
-            ;;
         option-STORE-URI|directory)
             ## Not sure how to present alternatives here
             compopt -o filenames
@@ -1248,6 +1242,8 @@ NIX_FILE
                 COMPREPLY=($(compgen -W "${channels[*]}" -- "${cur#*:}"))
                 return
             fi
+            ;&
+        arg-FILES|nix_file)
             compopt -o filenames
             COMPREPLY=($(compgen -d -- "$cur"))
             COMPREPLY+=($(compgen -X "!*.nix" -f -- "$cur"))
