@@ -21,6 +21,30 @@ function _nix_attr_paths () {
         attr_path=${cur%.*}
     fi
 
+    # Get all the attribute names in $attr_path
+    # prefix with 'top' as we let 'top = $defexpr' in NIX_FILE, where
+    # 'builtins.attrNames $prefixed_path' is being run
+    local prefixed_path=top${attr_path:+.$attr_path}
+    local -a packages=($(
+         _nix_eval_stdin <<NIX_FILE
+                let
+                  top_gen = $defexpr;
+                  # --file arguments can be a lambda producing a record too
+                  top = if builtins.typeOf top_gen == "lambda" then top_gen {} else top_gen ;
+                in
+                  builtins.attrNames $prefixed_path
+NIX_FILE
+    ))
+
+    # Don't insert space as we'll too often have to backspace and add a '.'
+    compopt -o nospace
+    # Generate the completion list prefixed with $attr_path and match against
+    # the current word
+    COMPREPLY=( $(compgen -P "${attr_path:+${attr_path}.}" -W "${packages[*]}" \
+                          -- ${cur##*.}))
+}
+
+function _nix_eval_stdin () {
     # Build up a modified NIX_PATH using -I and --include
     local i override=""
     for ((i=1; i < ${#words[*]}; i++)); do
@@ -51,27 +75,8 @@ function _nix_attr_paths () {
         override=${override/"$url"/"$cache"}
     done
 
-    # Get all the attribute names in $attr_path
-    # prefix with 'top' as we let 'top = $defexpr' in NIX_FILE, where
-    # 'builtins.attrNames $prefixed_path' is being run
-    local prefixed_path=top${attr_path:+.$attr_path}
-    local -a packages=($(
-        NIX_PATH=$override nix-instantiate --eval - <<NIX_FILE 2> /dev/null | tr '"[]' ' '
-                let
-                  top_gen = $defexpr;
-                  # --file arguments can be a lambda producing a record too
-                  top = if builtins.typeOf top_gen == "lambda" then top_gen {} else top_gen ;
-                in
-                  builtins.attrNames $prefixed_path
-NIX_FILE
-    ))
-
-    # Don't insert space as we'll too often have to backspace and add a '.'
-    compopt -o nospace
-    # Generate the completion list prefixed with $attr_path and match against
-    # the current word
-    COMPREPLY=( $(compgen -P "${attr_path:+${attr_path}.}" -W "${packages[*]}" \
-                          -- ${cur##*.}))
+    # Eval stdin 
+    NIX_PATH=$override nix-instantiate --eval - 2> /dev/null | tr '"[]' ' '
 }
 
 # Resolve any urls ourselves, as nix will start downloading and block
@@ -1166,8 +1171,7 @@ function _nix_completion () {
             else
                 func="import $file"
             fi
-            local -a names=($(nix-instantiate --eval - <<NIX_FILE 2> /dev/null \
-                                  | tr '"[]' ' '
+            local -a names=($(_nix_eval_stdin <<NIX_FILE
                   let
                     args = builtins.functionArgs ($func);
                   in
@@ -1218,8 +1222,10 @@ NIX_FILE
             ;;
         nix-system)
             local -a systems=(
-                $(nix-instantiate --eval --expr \
-                                  '(import <nixpkgs> {}).lib.systems.doubles.all'))
+                $(_nix_eval_stdin <<NIX_FILE
+                                  (import <nixpkgs> {}).lib.systems.doubles.all
+NIX_FILE
+                ))
             COMPREPLY=($(compgen -W "${systems[*]//@(\[|\])/}" -- "$cur"))
             return
             ;;
