@@ -315,7 +315,7 @@ function _nix_completion () {
     # Used in: nix-build, nix-env, nix-instantiate, nix-shell
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
-            '(--attr|-A)*'{--attr,-A}':->attr_path' '(--expr|-E)'{--expr,-E}
+            '(--attr|-A)*'{--attr,-A}':->attr_path'
             '*--arg:->empty:->empty' '*--argstr:->empty:->empty'
             '--max-silent-time:->empty'
             '--timeout:->empty'
@@ -353,6 +353,7 @@ function _nix_completion () {
         nix-build)
             local -a nix_build_opts=(
                 '--drv-link:->empty' '--add-drv-link'
+                '(--expr|-E)'{--expr,-E}
                 '--no-out-link'
                 {--out-link,-o}':->empty')
             _parse ':*->file-or-expr' ${nix_common_opts[*]} \
@@ -366,7 +367,8 @@ function _nix_completion () {
                 '--pure'
                 # nix-shell only takes one -A, so override the default
                 "(--attr|-A)"{--attr,-A}':->attr_path'
-                '(--packages|-p)'{--packages,-p})
+                '(--packages|-p|--expr|-E)'{--expr,-E}
+                '(--packages|-p|--expr|-E)'{--packages,-p})
 
             _parse ':*->package_attr_path' ${nix_common_opts[*]} \
                    + boiler \
@@ -648,7 +650,7 @@ function _nix_completion () {
             ;;
         nix-instantiate)
             _parse \
-                ${nix_boilerplate_opts[*]} \
+                ${nix_boilerplate_opts[*]} '(--expr|-E)'{--expr,-E} \
                 ${nix_common_opts[*]} '--xml' '--json' '--add-root:->gc-root' \
                 '--indirect' '--parse' '--eval' "--find-file:*->nix_file"\
                 '--strict' '--read-write-mode' ':*->file-or-expr' && return 0
