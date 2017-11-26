@@ -1087,8 +1087,11 @@ function _nix_completion () {
                             ;;
                     esac
                 done
-
-                defexpr="import $file {$args}"
+                if [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
+                    defexpr="($file) {$args}"
+                else
+                    defexpr="import $file {$args}"
+                fi
             else
             # If there's no file input, generate the default top level
             # expressions for nix-env or nix
@@ -1154,10 +1157,16 @@ function _nix_completion () {
             ;;
         function-arg|option-NAME)
             local file=$(_nix_get_file_arg)
+            local func=""
+            if [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
+                func="$file"
+            else
+                func="import $file"
+            fi
             local -a names=($(nix-instantiate --eval - <<NIX_FILE 2> /dev/null \
                                   | tr '"[]' ' '
                   let
-                    args = builtins.functionArgs (import $file);
+                    args = builtins.functionArgs ($func);
                   in
                     builtins.attrNames args
 NIX_FILE
