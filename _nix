@@ -1132,6 +1132,7 @@ function _nix_completion () {
             fi
 
             _nix_print defexpr: "$defexpr"
+            _nix_attr_paths "$defexpr"
             return 0
             ;;
         file-or-expr)
