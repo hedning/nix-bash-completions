@@ -259,10 +259,13 @@ function _parse () {
 
             local flag=""
             for flag in ${flags[*]}; do
-                # Register the flag being on the command line
-                opts[${flag}]=1
 
-                local -a actions=(${options["$flag"]//:/ })
+                local spec=${options["$flag"]}
+                local -a actions=(${spec//:/ })
+
+                # Register the flag being on the command line
+                [[ "$spec" ]] && opts[${flag}]=1
+
                 # Check if actions contains an exclusion pattern
                 if [[ ${actions[0]} == *\# ]]; then
                     local prefix="${excluded_options:+|}"
