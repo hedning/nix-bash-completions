@@ -1013,6 +1013,7 @@ function _nix_completion () {
     _nix_print  "opt_args: ${!opt_args[*]} ${opt_args[*]}"
 
     # Handle completion of different types of arguments
+    while true; do
     case "$state" in
         main_command)
             COMPREPLY=($(compgen -W "${main_commands[*]}" -- "$cur"))
@@ -1280,9 +1281,11 @@ function _nix_completion () {
             ;;
         *|arg-REGEX|arg-STRINGS|option-NAME|option-EXPR|option-STRING)
             _nix_print  "$state not implemented yet"
+            return
             ;;
 
     esac
+    done
     return 1
 }
 # Set up the completion for all relevant commands
