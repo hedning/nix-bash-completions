@@ -1171,6 +1171,16 @@ function _nix_completion () {
             else
                 func="import $file"
             fi
+            local i exclude=""
+            for ((i=1; i < ${#words[*]}; i++)); do
+                case "${words[$i]}" in
+                    --arg|--argstr)
+                        # Don't add the name we're currently typing
+                        [[ $i == $((cword - 1)) ]] && continue
+                        exclude+=${exclude:+|}${words[$((i+1))]}
+                        ;;
+                esac
+            done
             local -a names=($(_nix_eval_stdin <<NIX_FILE
                   let
                     args = builtins.functionArgs ($func);
@@ -1178,7 +1188,7 @@ function _nix_completion () {
                     builtins.attrNames args
 NIX_FILE
                               ))
-            COMPREPLY=($(compgen -W "${names[*]}" -- "$cur"))
+            COMPREPLY=($(compgen -W "${names[*]}" -X "*($exclude)" -- "$cur"))
             return
             ;;
         file-or-expr)
