@@ -519,12 +519,15 @@ function _nix_completion () {
                                          ':*->nix_generation')
                         break
                         ;;
-                    --switch-generation|-[^-]#G[^-]#)
+                    --switch-generation|-*([a-zA-Z])G*([a-zA-Z]))
                         command_options=(${nix_env_common_opts[*]}
                                          ':->nix_generation')
                         break
                         ;;
-
+                    --list-generations)
+                        command_options=(${nix_env_common_opts[*]})
+                        break
+                        ;;
                 esac
             done
 
