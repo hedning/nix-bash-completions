@@ -460,7 +460,7 @@ function _nix_completion () {
                     '--system-filter:->nix-system')
 
             local -a nix_env_b=('(--prebuilt-only|-b)'{--prebuilt-only,-b})
-            local nix_env_from_profile='--from-profile'
+            local nix_env_from_profile='--from-profile:->profile'
 
             local -a command_options
             for word in ${words[*]:1}; do
@@ -511,7 +511,7 @@ function _nix_completion () {
                     ;;
                     --switch-profile|-*([a-zA-Z])S*([a-zA-Z]))
                         command_options=(${nix_env_common_opts[*]}
-                                         ':->nix_profile')
+                                         ':->profile')
                         break
                         ;;
                     --delete-generations)
@@ -742,7 +742,7 @@ function _nix_completion () {
                 ${nix_common_nixos_rebuild[*]} \
                 '--upgrade' '--install-grub' "--no-build-nix"             \
                 '--fast' '--rollback'                                     \
-                '(--profile-name|-p)'{--profile-name,-p}':->nix_profile'  \
+                '(--profile-name|-p)'{--profile-name,-p}':->profile-name'  \
                 ':->main_command' && return 0
             ;;
         nixos-install)
@@ -1223,13 +1223,25 @@ NIX_FILE
             COMPREPLY=($(compgen -W "${nixoptions[*]}" -- "$cur"))
             return
             ;;
+        profile)
+            compopt -o filenames
+            if [[ "$cur" ]]; then
+                COMPREPLY=($(compgen -d -- "$cur"))
+            else
+                local profiles=/nix/var/nix/profiles/
+                COMPREPLY=($(cd $profiles && compgen -P $profiles -d \
+                                                     -- "${cur#$profiles}"))
+            fi
+            return
+            ;;
         gc-root)
             compopt -o filenames
             if [[ "$cur" || "${opts[--indirect]}" ]]; then
                COMPREPLY=($(compgen -d -- $cur))
             else
                 local gcroot=/nix/var/nix/gcroots/
-                COMPREPLY=($(cd $gcroot && compgen -P $gcroot -d -- ${cur#$gcroot}))
+                COMPREPLY=($(cd $gcroot && compgen -P $gcroot -d \
+                                                   -- ${cur#$gcroot}))
             fi
             return
             ;;
