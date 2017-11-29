@@ -77,8 +77,16 @@ local state
 local -a line
 local -A opt_args opts
 _parse ':*->FILE' '(--attr|-A)'{--attr,-A}':->ATTR_PATH' \
-       '(--packages|-p|shell)'{--packages,-p}':*->PACKAGE_ATTR_PATH') && return
+       '(--packages|-p|shell)'{--packages,-p}'' '':*->FILE-OR-PACKAGE') \
+       && return
 case "$state"
+    FILE-OR-PACKAGE)
+      if [[ "${opts[--packages]}" || "${opts[-p]}" ]];
+        #Complete packages
+      else
+        COMPREPLY=($(compgen -f $cur))
+      fi
+esac
 ```
 
 At the moment `_parse` only understands long options, eg. `--option`, and stackable short options, eg. `-f`. Syntax like `-some-option` is not supported.
