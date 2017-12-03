@@ -11,6 +11,12 @@ For quick testing just source the `_nix` file: `. _nix`, and start tabbing.
 
 Some arguments support several types of input, but due to bash's limited completion system only exposes one type at a time. For instance `nix eval <tab>` will give you the default completion which is attribute paths, but `nix eval ./<tab>` will give you file completion (as store paths are valid input). If you aren't getting file completion on an option or argument which support it when starting off with `./`, `~/` or `/` please report it in an issue and it should be fixed promptly. Another example is `nix run --file channel:<tab>` which will complete channel names instead of files.
 
+## Completing attribute paths to packages
+
+The preferred way to reference a package in Nix is by attribute path, not by name. Attribute paths look like this `nixos.mplayer` or `nixos.gnome.gedit`, where `nixos` is a collection of all packages. If `<tab>` results in eg. something like `nixos` you'll need to manually add a `.` to access the packages available in `nixos`. 
+
+When using `nix-env` it's best to always add the `--attr` or `-A` flag as `nix-env` defaults to looking up packages by name which aren't completed fully (this is a legacy problem, the new `nix` command only works on attribute paths by default).
+
 Completion of attribute paths is context aware, so eg. `nix-env -i -f some/path/ -A <tab>` complete paths in `./some/path/default.nix`. It will also pick up `default.nix` or `shell.nix` in the current directory for `nix-build -A` and `nix-shell -A`. Things like `nix-shell -I nixpkgs=. -p <tab>` is also supported.
 
 ## Installation and dependencies
