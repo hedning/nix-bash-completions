@@ -25,7 +25,7 @@ You need [bash-completion](https://github.com/scop/bash-completion) setup correc
 
 Then you can install `nix-bash-completions` from the cloned git repo with `nix-env -i -f default.nix`, or from nixpkgs eg. `nix-env -f '<nixpkgs>  -iA nix-bash-completions'`.
 
-After installation `bash-completion` should correctly source the script when needed, provided `$XDG_DATA_DIR` includes `~/.nix-profile/share`.
+After installation `bash-completion` should correctly source the script when needed, provided `$XDG_DATA_DIRS` includes `~/.nix-profile/share`.
 
 ## Implementation
 
