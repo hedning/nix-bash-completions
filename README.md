@@ -27,6 +27,8 @@ Then you can install `nix-bash-completions` from the cloned git repo with `nix-e
 
 After installation `bash-completion` should correctly source the script when needed, provided `$XDG_DATA_DIRS` includes `~/.nix-profile/share`.
 
+On macOS you might need to copy or link the installed files in `~/.nix-profile/share/bash-completion/completions/` to `~/.local/share/bash-completion/completions/`, though I don't know if it's necessary or that it will work, as I don't have mac. If someone is using this successfully on macOS and would like to share the necessary steps in an issue then I'll happily add it to the readme.
+
 ## Implementation
 
 The script runs on top of `_parse` which is a bare bones implementation of zsh's [`_arguments`](http://zsh.sourceforge.net/Doc/Release/Completion-System.html#index-_005farguments) with some minor modifications to the syntax, and a bunch of stuff not implemented. A brief description of the `_parse` syntax follows, for anyone interested in reading the code, or using `_parse` for other completion scripts.
