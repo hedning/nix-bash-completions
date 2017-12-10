@@ -21,13 +21,11 @@ Completion of attribute paths is context aware, so eg. `nix-env -i -f some/path/
 
 ## Installation and dependencies
 
-You need [bash-completion](https://github.com/scop/bash-completion) for it to work (which is the case if most commands already provides completions).
+You need [bash-completion](https://github.com/scop/bash-completion) setup correctly, on NixOS this is done by setting `programs.bash.enableCompletion = true;` in `configuration.nix`. On other distributions installing the `bash-completion` package with the native package manager should probably do the trick.
 
-On NixOS this is done by setting `programs.bash.enableCompletion = true;` in `configuration.nix`. 
+Then you can install `nix-bash-completions` from the cloned git repo with `nix-env -i -f default.nix`, or from nixpkgs eg. `nix-env -f '<nixpkgs>  -iA nix-bash-completions'`.
 
-Then you can install it from the cloned git repo with `nix-env -i -f default.nix`, or pull it down using the 17.09 small channel: `nix-env -iA nix-bash-completions -f https://nixos.org/channels/nixos-17.09-small/nixexprs.tar.xz`.
-
-For other systems you need bash to source all files in  `~/.nix-profile/share/bash-completion/completions/` after installation. 
+After installation `bash-completion` should correctly source the script when needed, provided `$XDG_DATA_DIR` includes `~/.nix-profile/share`.
 
 ## Implementation
 
