@@ -1355,7 +1355,7 @@ NIX_FILE
 complete -F _nix_completion \
           nix-build nix-shell nix-env nix-store \
           nix-channel nix-copy-closure nix-collect-garbage \
-          nix-hash nix-collect-garbage nix-instantiate \
+          nix-hash nix-instantiate \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
           nixos-container nixos-generate-config nixos-build-vms \
