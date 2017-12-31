@@ -1098,10 +1098,12 @@ function _nix_completion () {
                             ;;
                     esac
                 done
+                args=${args:+\{$args\}}
+
                 if [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
-                    defexpr="($file) {$args}"
+                    defexpr="($file) $args"
                 else
-                    defexpr="import $file {$args}"
+                    defexpr="import $file $args"
                 fi
             else
             # If there's no file input, generate the default top level
