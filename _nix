@@ -11,6 +11,11 @@ function _nix_print () {
 
 function _nix_attr_paths () {
 
+    # Starting with '.' means we want files, not attribute names
+    if [[ "$cur" == .* ]]; then
+        return
+    fi
+
     # The unnamed top context to look up attribute names
     local defexpr="$1"
 
