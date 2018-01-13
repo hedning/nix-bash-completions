@@ -11,6 +11,7 @@ function _nix_print () {
 
 function _nix_attr_paths () {
 
+    local cur=${cur#@(\'|\")}
     # Starting with '.' means we want files, not attribute names
     if [[ "$cur" == .* ]]; then
         return
