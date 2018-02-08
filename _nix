@@ -1250,7 +1250,7 @@ NIX_FILE
             COMPREPLY=($(compgen -W "${nixoptions[*]}" -- "$cur"))
             return
             ;;
-        profile)
+        profile|option-PROFILE-DIR)
             compopt -o filenames
             if [[ "$cur" ]]; then
                 COMPREPLY=($(compgen -d -- "$cur"))
