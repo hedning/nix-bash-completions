@@ -66,7 +66,7 @@ NIX_FILE
     # Generate the completion list prefixed with $attr_path and match against
     # the current word
     COMPREPLY=( $(compgen -P "${attr_path:+${attr_path}.}" -W "${packages[*]}" \
-                          -- ${cur##*.}))
+                          -- "${cur##*.}"))
 }
 
 function _nix_eval_stdin () {
