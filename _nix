@@ -862,7 +862,8 @@ function _nix_completion () {
                    modify)
                        main_options=(
                            ${nixops_search_path_args[*]}
-                           '(--name|-n)'{--name,-n}':->empty')
+                           '(--name|-n)'{--name,-n}':->empty'
+                           ':*->nix_file')
                        break
                        ;;
                    clone)
