@@ -947,6 +947,7 @@ function _nix_completion () {
            done
 
            _parse ':->main_command' \
+                  ${nixops_common_arguments[*]} \
                   ${main_options[*]} \
                   ${nix_boilerplate_opts[*]} && return 0
            ;;
