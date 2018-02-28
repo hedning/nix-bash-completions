@@ -1385,4 +1385,4 @@ complete -F _nix_completion \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
           nixos-container nixos-generate-config nixos-build-vms \
-          nixops nix
+          nix
