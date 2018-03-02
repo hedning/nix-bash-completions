@@ -385,9 +385,17 @@ function _nix_completion () {
         "*--option:->nixoption:->nixoptionvalue"
         ${nix_repair})
 
+    # Used for all the nix-* commands, but not nixos-* commands
+    # Introduced in 2.0
+    local -a nix_new_opts=(
+        '*--builders:->machine' '--store:->option-STORE-URI'
+        '*--include:->option-INCLUDE'
+    )
+
     # Used in: nix-build, nix-env, nix-instantiate, nix-shell
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
+        ${nix_new_opts[*]}
             '(--attr|-A)*'{--attr,-A}':->attr_path'
             '*--arg:->function-arg:->empty' '*--argstr:->function-arg:->empty'
             '--max-silent-time:->empty'
@@ -674,12 +682,14 @@ function _nix_completion () {
             done
 
             _parse ${nix_boilerplate_opts[*]} ${command_options[*]} \
+                   ${nix_new_opts[*]} \
                    ${main_spec[*]} && return 0
             ;;
         nix-channel)
             # nix-channel handling
             _parse \
                 ${nix_boilerplate_opts[*]} \
+                ${nix_new_opts[*]} \
                 '(-*)--add:->url:->channel_name' \
                 '(-*)--remove:->nix_channels' \
                 '(-*)--list' \
@@ -699,6 +709,7 @@ function _nix_completion () {
         nix-copy-closure)
             _parse \
                 ${nix_boilerplate_opts[*]} \
+                ${nix_new_opts[*]} \
                 '(--from)--to' '(--to)--from' '--sign' '--gzip' \
                 '--include-outputs' '(--use-substitutes -s)'{--use-substitutes,-s} \
                 ':_user_at_host' ':*->file' && return 0
@@ -706,6 +717,7 @@ function _nix_completion () {
         nix-collect-garbage)
             _parse \
                 ${nix_boilerplate_opts[*]} \
+                ${nix_new_opts[*]} \
                 '(--delete-old|-d)'{--delete-old,-d} \
                 '--delete-older-than:->empty' \
                 ${nix_dry_run[*]} && return 0
@@ -714,6 +726,7 @@ function _nix_completion () {
             local ig='--to-base16|--to-base32'
             _parse \
                 ${nix_boilerplate_opts[*]} \
+                ${nix_new_opts[*]} \
                 '(-*)--to-base16:->hash' \
                 '(-*)--to-base32:->hash' \
                 "($ig)--flat" \
