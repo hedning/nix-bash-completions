@@ -382,7 +382,7 @@ function _nix_completion () {
         '(--keep-going|-k)'{--keep-going,-k}
         '(--keep-failed|-K)'{--keep-failed,-K}
         '--fallback' '--show-trace'
-        '--option:->legacy-option:->legacy-option-value'
+        "*--option:->nixoption:->nixoptionvalue"
         ${nix_repair})
 
     # Used in: nix-build, nix-env, nix-instantiate, nix-shell
@@ -1227,27 +1227,6 @@ NIX_FILE
                 state=nix_file
             fi
             continue
-            ;;
-        legacy-option)
-            local -a nixoptions=(
-                'gc-keep-outputs' 'gc-keep-derivations'
-                'env-keep-derivations' 'build-max-jobs'
-                'build-cores' 'build-max-silent-time'
-                'build-timeout' 'build-max-log-size'
-                'build-users-group' 'build-use-chroot'
-                'build-chroot-dirs' 'build-extra-chroot-dirs'
-                'build-use-substitutes' 'build-fallback'
-                'build-cache-failure' 'build-keep-log'
-                'build-compress-log' 'use-binary-caches'
-                'binary-caches' 'binary-caches-files'
-                'trusted-binary-caches' 'extra-binary-caches'
-                'signed-binary-caches' 'binary-cache-public-keys'
-                'binary-caches-parallel-connections'
-                'verify-https-binary-caches' 'force-manifest' 'system'
-                'fsync-metadata' 'auto-optimise-store' 'connect-timeout'
-                'log-servers' 'trusted-users')
-            COMPREPLY=($(compgen -W "${nixoptions[*]}" -- "$cur"))
-            return
             ;;
         profile|option-PROFILE-DIR)
             compopt -o filenames
