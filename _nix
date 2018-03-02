@@ -554,7 +554,7 @@ function _nix_completion () {
             done
 
             _parse ${command_options[*]} \
-                   '*'{--file,-f}':->nix_file' \
+                   '*'{--file,-f}':->option-FILE' \
                    ${nix_boilerplate_opts} ${main_spec[*]} && return 0
 
             case "$state" in
@@ -1224,7 +1224,7 @@ NIX_FILE
             if [[ "${opts[--expr]}" || "${opts[-E]}" ]]; then
                 state=expr
             else
-                state=nix_file
+                state=option-FILE
             fi
             continue
             ;;
