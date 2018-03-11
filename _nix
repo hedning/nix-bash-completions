@@ -1165,7 +1165,7 @@ function _nix_completion () {
 
                     defexpr="{ "
                     for p in ${result[*]}; do
-                        defexpr+="$(basename $p) = import $p {}; "
+                        defexpr+="$(basename $p) = import $p; "
                     done
                     defexpr+="}"
 
