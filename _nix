@@ -1362,6 +1362,9 @@ NIX_FILE
             ;;
         *|arg-REGEX|arg-STRINGS|option-NAME|option-EXPR|option-STRING)
             _nix_print  "$state not implemented yet"
+            # Fall back to file completion
+            compopt -o filenames
+            COMPREPLY+=($(compgen -f -- "$cur"))
             return
             ;;
 
