@@ -371,7 +371,7 @@ function _nix_completion () {
 
     local nix_repair='--repair';
 
-    local nix_search_path_args='-I:->option-INCLUDE'
+    local nix_search_path_args='*-I:->option-INCLUDE'
 
     # Misc Nix options accepted by nixos-rebuild
     local -a nix_common_nixos_rebuild=(
