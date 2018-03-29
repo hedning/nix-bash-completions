@@ -382,14 +382,13 @@ function _nix_completion () {
         '(--keep-going|-k)'{--keep-going,-k}
         '(--keep-failed|-K)'{--keep-failed,-K}
         '--fallback' '--show-trace'
-        "*--option:->nixoption:->nixoptionvalue"
         ${nix_repair})
 
     # Used for all the nix-* commands, but not nixos-* commands
     # Introduced in 2.0
     local -a nix_new_opts=(
-        '*--builders:->machine' '--store:->option-STORE-URI'
         '*--include:->option-INCLUDE'
+        "*--option:->nixoption:->nixoptionvalue"
     )
 
     # Used in: nix-build, nix-env, nix-instantiate, nix-shell
