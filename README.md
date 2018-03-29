@@ -21,13 +21,23 @@ Completion of attribute paths is context aware, so eg. `nix-env -i -f some/path/
 
 ## Installation and dependencies
 
-You need [bash-completion](https://github.com/scop/bash-completion) setup correctly, on NixOS this is done by setting `programs.bash.enableCompletion = true;` in `configuration.nix`. On other distributions installing the `bash-completion` package with the native package manager should probably do the trick.
+### NixOS 18.03 or newer
+
+Setting `programs.bash.enableCompletion = true;` in `/etc/nixos/configuration.nix` should install and enable `nix-bash-completion` correctly.
+
+### Other distros
+
+You need [bash-completion](https://github.com/scop/bash-completion) setup correctly. Installing the `bash-completion` package with the native package manager should probably do the trick.
 
 Then you can install `nix-bash-completions` from the cloned git repo with `nix-env -i -f default.nix`, or from nixpkgs eg. `nix-env -f '<nixpkgs>  -iA nix-bash-completions'`.
 
-After installation `bash-completion` should correctly source the script when needed, provided `$XDG_DATA_DIRS` includes `~/.nix-profile/share`.
+Make sure that `$XDG_DATA_DIRS` includes `~/.nix-profile/share`, which will tell `bash-completion` where too find the script when completion is done.
 
-On macOS you might need to copy or link the installed files in `~/.nix-profile/share/bash-completion/completions/` to `~/.local/share/bash-completion/completions/`, though I don't know if it's necessary or that it will work, as I don't have a mac. If someone is using this successfully on macOS and would like to share the necessary steps in an issue then I'll happily add it to the readme.
+### macOS
+
+In addition to setting up [bash-completion](https://github.com/scop/bash-completion) and installing `nix-bash-completions` through nix-env, you'll need a newer version of Bash (version 4 or greater) as [Apple refuses to ship GPL v3 licensed software](http://meta.ath0.com/2012/02/05/apples-great-gpl-purge/).
+
+You might also need to copy or link the installed files in `~/.nix-profile/share/bash-completion/completions/` to `~/.local/share/bash-completion/completions/` so `bash-completion` will know where to look for the completion script. Though I don't know if it's necessary or that it will work, as I don't have a mac. If someone is using this successfully on macOS and would like to share the necessary steps then I'll happily add it to the readme.
 
 ## Implementation
 
