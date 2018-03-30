@@ -1298,7 +1298,10 @@ NIX_FILE
                     nixos-15.09-small     nixos-unstable
                     nixos-16.03           nixos-unstable-small
                     nixos-16.03-small     nixpkgs-17.09-darwin
-                    nixos-16.03-testing   nixpkgs-unstable)
+                    nixos-16.03-testing   nixpkgs-unstable
+                    nixpkgs-18.03-darwin  nixos-18.03
+                    nixos-18.03-small
+                )
                 COMPREPLY=($(compgen -W "${channels[*]}" -- "${cur#*:}"))
                 return
             fi
