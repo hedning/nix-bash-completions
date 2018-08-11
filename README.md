@@ -31,7 +31,7 @@ You need [bash-completion](https://github.com/scop/bash-completion) setup correc
 
 Then you can install `nix-bash-completions` from the cloned git repo with `nix-env -i -f default.nix`, or from nixpkgs eg. `nix-env -f '<nixpkgs>  -iA nix-bash-completions'`.
 
-Make sure that `$XDG_DATA_DIRS` includes `~/.nix-profile/share`, which will tell `bash-completion` where too find the script when completion is done.
+Make sure that `$XDG_DATA_DIRS` includes `~/.nix-profile/share`, which will tell `bash-completion` where to find the script when completion is done.  Be careful though: make sure that `$XDG_DATA_DIRS` also includes your distribution's defaults (like `/usr/local/share/:/usr/share/`), or you may not be able to launch some applications from the console.
 
 ### macOS
 
