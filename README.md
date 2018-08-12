@@ -23,7 +23,7 @@ Completion of attribute paths is context aware, so eg. `nix-env -i -f some/path/
 
 ### NixOS 18.03 or newer
 
-Setting `programs.bash.enableCompletion = true;` in `/etc/nixos/configuration.nix` should install and enable `nix-bash-completion` correctly.
+Setting `programs.bash.enableCompletion = true;` in `/etc/nixos/configuration.nix` should install and enable `nix-bash-completion` correctly. From 18.09 and forward (ie. nixos-unstable for now) completion (including nix-bash-completions) is enabled by default.
 
 ### Other distros
 
