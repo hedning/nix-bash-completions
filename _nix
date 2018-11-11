@@ -394,7 +394,7 @@ function _nix_completion () {
     local -a nix_common_opts=(
         ${nix_common_nixos_rebuild[*]}
         ${nix_new_opts[*]}
-            '(--attr|-A)*'{--attr,-A}':->attr_path'
+            '*'{--attr,-A}':->attr_path'
             '*--arg:->function-arg:->empty' '*--argstr:->function-arg:->empty'
             '--max-silent-time:->empty'
             '--timeout:->empty'
