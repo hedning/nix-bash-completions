@@ -753,8 +753,10 @@ function _nix_completion () {
             # TODO: make --url and :->file mutually exclusive
             ;;
         nix-prefetch-url)
-            _parse \
-                '--type:->option-TYPE' ':->url' ':->empty' && return 0
+            _parse '--type:->option-TYPE' ':->option-FILE' ':->empty'\
+                   '*'{--attr,-A}':->attr_path' '--unpack' \
+                   '--name:->store-name' '--print-path' \
+                && return 0
             ;;
         nix-push)
             _parse \
