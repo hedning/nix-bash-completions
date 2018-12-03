@@ -768,6 +768,18 @@ function _nix_completion () {
                 '--url-prefix:->url'\
                 ':*->file' && return 0
             ;;
+        nixos-option)
+            _parse \
+                $nix_search_path_args '--xml' \
+                ':->nixos_options' && return 0
+
+            if [[ "$state" == nixos_options ]]; then
+                _nix_attr_paths \
+                    '((import <nixpkgs/lib>).evalModules { modules = import <nixpkgs/nixos/modules/module-list.nix>; }).options'
+                return 0
+            fi
+
+            ;;
         nixos-rebuild)
             main_commands=(
                 'switch' 'boot' 'test' 'build' 'dry-build'
@@ -1384,4 +1396,4 @@ complete -F _nix_completion \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
           nixos-container nixos-generate-config nixos-build-vms \
-          nix
+          nix nixos-option
