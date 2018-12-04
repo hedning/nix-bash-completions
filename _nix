@@ -774,8 +774,12 @@ function _nix_completion () {
                 ':->nixos_options' && return 0
 
             if [[ "$state" == nixos_options ]]; then
-                _nix_attr_paths \
-                    '((import <nixpkgs/lib>).evalModules { modules = import <nixpkgs/nixos/modules/module-list.nix>; }).options'
+                _nix_attr_paths '
+                with import <nixpkgs/lib>;
+                filterAttrsRecursive
+                  (k: _: substring 0 1 k != "_")
+                  (evalModules { modules = import <nixpkgs/nixos/modules/module-list.nix>; }).options
+                '
                 return 0
             fi
 
