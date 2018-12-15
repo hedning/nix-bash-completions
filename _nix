@@ -1304,7 +1304,7 @@ NIX_FILE
             COMPREPLY=($(compgen -c -- $cur))
             return
             ;;
-        option-FILE)
+        option-FILE|arg-FILES)
             if [[ "$cur" == channel:* ]]; then
                 local -a channels=(
                     nixos-13.10           nixos-16.09
