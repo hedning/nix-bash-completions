@@ -783,7 +783,7 @@ function _nix_completion () {
         nixos-rebuild)
             main_commands=(
                 'switch' 'boot' 'test' 'build' 'dry-build'
-                'dry-activate' 'build-vm' 'build-vm-with-bootloader')
+                'dry-activate' 'edit' 'build-vm' 'build-vm-with-bootloader')
             _parse \
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_nixos_rebuild[*]} \
