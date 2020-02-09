@@ -29,7 +29,7 @@ function _nix_attr_paths () {
     fi
 
     # attr1.attr3 -> ("attr1" "attr2")
-    local -a paths=(${attr_path/./ })
+    local -a paths=(${attr_path//./ })
     paths=(${paths[*]/%/\"})
     paths=(${paths[*]/#/\"})
 
