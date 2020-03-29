@@ -860,12 +860,12 @@ function _nix_completion () {
 
        nixops)
            main_commands=(
-               list create modify clone delete info check set-args deploy
-               send-keys destroy stop start reboot show-physical ssh
-               ssh-for-each scp rename backup backup-status remove-backup
-               clean-backups restore show-option list-generations rollback
-               delete-generation show-console-output dump-nix-paths export
-               import edit)
+               backup backup-status check clean-backups clone create delete
+               delete-generation deploy destroy dump-nix-paths edit export
+               import info list list-generations modify mount reboot
+               remove-backup rename restore rollback scp send-keys set-args
+               show-arguments show-console-output show-option show-physical
+               ssh ssh-for-each start stop)
 
            # Options valid for every command
            local -a nixops_common_arguments=(
