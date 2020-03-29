@@ -978,11 +978,19 @@ function _nix_completion () {
                   ${main_options[*]} \
                   ${nix_boilerplate_opts[*]} && return 0
 
+            local statecmd
+            if [[ "${opts[--state]}" || "${opts[-s]}" ]]; then
+                local statefile="${opt_args[--state]:-${opt_args[-s]}}"
+                if [[ "$statefile" == *.nixops && -f "$statefile" ]]; then
+                    statecmd="--state $statefile"
+                fi
+            fi
+
             case "$state" in
                 nixops_deployments)
                     local -a deployments=()
                     while read -r _ id _ name _; do deployments+=("$id" "$name")
-                    done < <(nixops list | tail -n +4 | head -n -1)
+                    done < <(nixops list $statecmd | tail -n +4 | head -n -1)
                     COMPREPLY=($(compgen -W "${deployments[*]}" -- "$cur"))
                     return
                     ;;
