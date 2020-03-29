@@ -872,7 +872,7 @@ function _nix_completion () {
                '(--deployment|-d)'{--deployment,-d}':->nixops_deployments'
                '--confirm' '--debug')
            local -a nixops_include_exclude=(
-               '--include:_known_hosts' '--exclude:_known_hosts')
+               '--include:->nixops_machines' '--exclude:->nixops_machines')
            local -a nixops_search_path_args=('-I:->option-INCLUDE')
 
 
@@ -948,7 +948,7 @@ function _nix_completion () {
                        ;;
                    show-option)
                        main_options=(
-                           '--xml' ':_known_hosts' ':->nixops_option')
+                           '--xml' ':->nixops_machines' ':->nixops_option')
                        break
                        ;;
                    set-args)
@@ -959,7 +959,7 @@ function _nix_completion () {
                        break
                        ;;
                    show-console-output)
-                       main_options=(':_known_hosts')
+                       main_options=(':->nixops_machines')
                        break
                        ;;
                    export)
@@ -986,12 +986,25 @@ function _nix_completion () {
                 fi
             fi
 
+            local deploymentcmd
+            if [[ "${opts[--deployment]}" || "${opts[-d]}" ]]; then
+                local deployment="${opt_args[--deployment]:-${opt_args[-d]}}"
+                deploymentcmd="--deployment $deployment"
+            fi
+
             case "$state" in
                 nixops_deployments)
                     local -a deployments=()
                     while read -r _ id _ name _; do deployments+=("$id" "$name")
                     done < <(nixops list $statecmd | tail -n +4 | head -n -1)
                     COMPREPLY=($(compgen -W "${deployments[*]}" -- "$cur"))
+                    return
+                    ;;
+                nixops_machines)
+                    local -a machines=()
+                    while read -r _ name _; do machines+=("$name")
+                    done < <(nixops info $statecmd $deploymentcmd | tail -n +10 | head -n -1)
+                    COMPREPLY=($(compgen -W "${machines[*]}" -- "$cur"))
                     return
                     ;;
             esac
