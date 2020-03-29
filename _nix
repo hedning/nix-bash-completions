@@ -869,7 +869,7 @@ function _nix_completion () {
            # Options valid for every command
            local -a nixops_common_arguments=(
                '(--state|-s)'{--state,-s}':->file'
-               '(--deployment|-d)'{--deployment,-d}
+               '(--deployment|-d)'{--deployment,-d}':->nixops_deployments'
                '--confirm' '--debug')
            local -a nixops_include_exclude=(
                '--include:_known_hosts' '--exclude:_known_hosts')
@@ -977,6 +977,16 @@ function _nix_completion () {
                   ${nixops_common_arguments[*]} \
                   ${main_options[*]} \
                   ${nix_boilerplate_opts[*]} && return 0
+
+            case "$state" in
+                nixops_deployments)
+                    local -a deployments=()
+                    while read -r _ id _ name _; do deployments+=("$id" "$name")
+                    done < <(nixops list | tail -n +4 | head -n -1)
+                    COMPREPLY=($(compgen -W "${deployments[*]}" -- "$cur"))
+                    return
+                    ;;
+            esac
            ;;
         nix)
            type nix &> /dev/null || return
