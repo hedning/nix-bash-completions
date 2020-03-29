@@ -97,7 +97,7 @@ function _nix_eval_stdin () {
         override=${override/"$url"/"$cache"}
     done
 
-    # Eval stdin 
+    # Eval stdin
     NIX_PATH=$override nix-instantiate --eval - 2> /dev/null | tr '"[]' ' '
 }
 
@@ -235,7 +235,7 @@ function _parse () {
     _nix_print  "    --**--" "-- Finished parsing spec"
     _nix_print  "arguments:" "${arguments[*]}"
     _nix_print "options" "${!options[*]}"
-    # _nix_print  groups: ${!groups[*]} ${groups[*]} 
+    # _nix_print  groups: ${!groups[*]} ${groups[*]}
 
 
     _nix_print  "-- Parse words"
@@ -297,7 +297,7 @@ function _parse () {
                     local prefix="${excluded_options:+|}"
                     [[ "$cword" != "$i" || $flag == -? ]] \
                         && excluded_options+="$prefix${actions[0]:0:-1}"
-                    _nix_print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}" 
+                    _nix_print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}"
                     actions=(${actions[*]:1})
                 fi
 
@@ -332,7 +332,7 @@ function _parse () {
     _nix_print  "-- Finished parsing words: ${completors[*]}"
 
     local completor=${completors[$cword]}
-    _nix_print  "completor: $completor" 
+    _nix_print  "completor: $completor"
 
     case "$completor" in
         -\>*)
