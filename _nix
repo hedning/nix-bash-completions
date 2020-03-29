@@ -852,13 +852,12 @@ function _nix_completion () {
                     ;;
             esac
             ;;
-       nixos-build-vms)
+        nixos-build-vms)
            _parse '--show-trace' "--no-out-link" \
                   ':->nix_file' '--help'\
                && return 0
            ;;
-
-       nixops)
+        nixops)
            main_commands=(
                backup backup-status check clean-backups clone create delete
                delete-generation deploy destroy dump-nix-paths edit export
@@ -979,7 +978,7 @@ function _nix_completion () {
                   ${main_options[*]} \
                   ${nix_boilerplate_opts[*]} && return 0
            ;;
-       nix)
+        nix)
            type nix &> /dev/null || return
 
            local -a common_options
