@@ -911,7 +911,7 @@ function _nix_completion () {
                            '--max-concurrent-copy:->number')
                        break
                        ;;
-                   destroy)
+                   check|destroy)
                        main_options=(
                            '--all'
                            ${nixops_include_exclude[*]})
@@ -925,7 +925,7 @@ function _nix_completion () {
                        main_options=('--all' '--plain' '--no-eval')
                        break
                        ;;
-                   check|ssh)
+                   ssh)
                        break
                        ;;
                    ssh-for-each)
