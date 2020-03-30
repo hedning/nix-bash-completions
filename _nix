@@ -870,10 +870,13 @@ function _nix_completion () {
            local -a nixops_common_arguments=(
                '(--state|-s)'{--state,-s}':->file'
                '(--deployment|-d)'{--deployment,-d}':->nixops_deployments'
-               '--confirm' '--debug')
+               '--confirm' '--debug' ${nix_search_path_args}
+               '(--max-jobs|-j)'{--max-jobs,-j}':->empty' '--cores:->empty'
+               '--keep-going' '(--keep-failed,-K)'{--keep-failed,-K}
+               '--show-trace' '--fallback' '--read-only-mode'
+               '*--option:->nixoption:->nixoptionvalue')
            local -a nixops_include_exclude=(
                '--include:->nixops_machines' '--exclude:->nixops_machines')
-           local -a nixops_search_path_args=('-I:->option-INCLUDE')
 
 
            local -a command_options=()
@@ -881,13 +884,11 @@ function _nix_completion () {
                case "$word" in
                    create)
                        main_options=(
-                           ${nixops_search_path_args[*]}
                            ':*->nix_file')
                        break
                        ;;
                    modify)
                        main_options=(
-                           ${nixops_search_path_args[*]}
                            '(--name|-n)'{--name,-n}':->empty'
                            ':*->nix_file')
                        break
@@ -907,7 +908,6 @@ function _nix_completion () {
                            '--create-only' '--build-only' '--copy-only' '--check'
                            '--allow-reboot' '--force-reboot' '--allow-recreate'
                            ${nixops_include_exclude[*]}
-                           ${nixops_search_path_args[*]}
                            '--max-concurrent-copy:->number')
                        break
                        ;;
