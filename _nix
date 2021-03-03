@@ -429,7 +429,7 @@ function _nix_completion () {
     # 3. Generating completions based on the resulting $state
     local -a main_commands=()
     case "${words[0]}" in
-        nix-build)
+        nix-build | nom-build)
             local -a nix_build_opts=(
                 '--drv-link:->empty' '--add-drv-link'
                 '(--expr|-E)'{--expr,-E}
@@ -1400,4 +1400,4 @@ complete -F _nix_completion \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
           nixos-container nixos-generate-config nixos-build-vms \
-          nix nixos-option
+          nix nixos-option nom-build
