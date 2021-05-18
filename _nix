@@ -990,14 +990,26 @@ function _nix_completion () {
                            "(--quiet)--quiet" "*{-v,--verbose}"
                            "(--version)"--version)
 
-           # Extract the commands with descriptions
-           # like ('command:some description' 'run:run some stuff')
-           main_commands=(
-               $(nix --help | sed -E \
-                                  -e '/^Available commands/,/^$/!d' \
-                                  -e '/^Available commands/d' \
-                                  -e '/^$/d' \
-                                  -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
+           if [[ $(nix --version) == *"2.4"* ]]; then
+               # Extract the commands from 2.4 man page
+               main_commands=(
+                   $(MANPAGER=cat nix --help | col -b | sed -E \
+                       -e '/Main commands/,/^Examples$/!d' \
+                       -e '/Main commands/d' \
+                       -e '/^$/d' \
+                       -e '/^ +• nix/!d' \
+                       -e 's/^ +• nix ([0-9a-z-]*) +(.*)$/\1/'))
+           else
+               # Extract the commands with descriptions
+               # like ('command:some description' 'run:run some stuff')
+               main_commands=(
+                   $(nix --help | sed -E \
+                                      -e '/^Available commands/,/^$/!d' \
+                                      -e '/^Available commands/d' \
+                                      -e '/^$/d' \
+                                      -e 's=^ +([0-9a-z-]*) +(.*)$=\1='))
+           fi
+
            # Add commands to an associative array for easy lookup
            local -A command_lookup
            local main_command
