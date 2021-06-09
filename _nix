@@ -97,7 +97,7 @@ function _nix_eval_stdin () {
         override=${override/"$url"/"$cache"}
     done
 
-    # Eval stdin 
+    # Eval stdin
     NIX_PATH=$override nix-instantiate --eval - 2> /dev/null | tr '"[]' ' '
 }
 
@@ -235,7 +235,7 @@ function _parse () {
     _nix_print  "    --**--" "-- Finished parsing spec"
     _nix_print  "arguments:" "${arguments[*]}"
     _nix_print "options" "${!options[*]}"
-    # _nix_print  groups: ${!groups[*]} ${groups[*]} 
+    # _nix_print  groups: ${!groups[*]} ${groups[*]}
 
 
     _nix_print  "-- Parse words"
@@ -297,7 +297,7 @@ function _parse () {
                     local prefix="${excluded_options:+|}"
                     [[ "$cword" != "$i" || $flag == -? ]] \
                         && excluded_options+="$prefix${actions[0]:0:-1}"
-                    _nix_print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}" 
+                    _nix_print "$flag's exclusion group:" "$prefix${actions[0]:0:-1}"
                     actions=(${actions[*]:1})
                 fi
 
@@ -332,7 +332,7 @@ function _parse () {
     _nix_print  "-- Finished parsing words: ${completors[*]}"
 
     local completor=${completors[$cword]}
-    _nix_print  "completor: $completor" 
+    _nix_print  "completor: $completor"
 
     case "$completor" in
         -\>*)
@@ -852,29 +852,31 @@ function _nix_completion () {
                     ;;
             esac
             ;;
-       nixos-build-vms)
+        nixos-build-vms)
            _parse '--show-trace' "--no-out-link" \
                   ':->nix_file' '--help'\
                && return 0
            ;;
-
-       nixops)
+        nixops)
            main_commands=(
-               list create modify clone delete info check set-args deploy
-               send-keys destroy stop start reboot show-physical ssh
-               ssh-for-each scp rename backup backup-status remove-backup
-               clean-backups restore show-option list-generations rollback
-               delete-generation show-console-output dump-nix-paths export
-               import edit)
+               backup backup-status check clean-backups clone create delete
+               delete-generation deploy destroy dump-nix-paths edit export
+               import info list list-generations modify mount reboot
+               remove-backup rename restore rollback scp send-keys set-args
+               show-arguments show-console-output show-option show-physical
+               ssh ssh-for-each start stop)
 
            # Options valid for every command
            local -a nixops_common_arguments=(
                '(--state|-s)'{--state,-s}':->file'
-               '(--deployment|-d)'{--deployment,-d}
-               '--confirm' '--debug')
+               '(--deployment|-d)'{--deployment,-d}':->nixops_deployments'
+               '--confirm' '--debug' ${nix_search_path_args}
+               '(--max-jobs|-j)'{--max-jobs,-j}':->empty' '--cores:->empty'
+               '--keep-going' '(--keep-failed,-K)'{--keep-failed,-K}
+               '--show-trace' '--fallback' '--read-only-mode'
+               '*--option:->nixoption:->nixoptionvalue')
            local -a nixops_include_exclude=(
-               '--include:_known_hosts' '--exclude:_known_hosts')
-           local -a nixops_search_path_args=('-I:->option-INCLUDE')
+               '--include:->nixops_machines' '--exclude:->nixops_machines')
 
 
            local -a command_options=()
@@ -882,13 +884,11 @@ function _nix_completion () {
                case "$word" in
                    create)
                        main_options=(
-                           ${nixops_search_path_args[*]}
                            ':*->nix_file')
                        break
                        ;;
                    modify)
                        main_options=(
-                           ${nixops_search_path_args[*]}
                            '(--name|-n)'{--name,-n}':->empty'
                            ':*->nix_file')
                        break
@@ -908,11 +908,10 @@ function _nix_completion () {
                            '--create-only' '--build-only' '--copy-only' '--check'
                            '--allow-reboot' '--force-reboot' '--allow-recreate'
                            ${nixops_include_exclude[*]}
-                           ${nixops_search_path_args[*]}
                            '--max-concurrent-copy:->number')
                        break
                        ;;
-                   destroy)
+                   check|destroy)
                        main_options=(
                            '--all'
                            ${nixops_include_exclude[*]})
@@ -924,9 +923,6 @@ function _nix_completion () {
                        ;;
                    info)
                        main_options=('--all' '--plain' '--no-eval')
-                       break
-                       ;;
-                   check|ssh)
                        break
                        ;;
                    ssh-for-each)
@@ -949,7 +945,7 @@ function _nix_completion () {
                        ;;
                    show-option)
                        main_options=(
-                           '--xml' ':_known_hosts' ':->nixops_option')
+                           '--xml' ':->nixops_machines' ':->nixops_option')
                        break
                        ;;
                    set-args)
@@ -960,10 +956,7 @@ function _nix_completion () {
                        break
                        ;;
                    show-console-output)
-                       main_options=(':_known_hosts')
-                       break
-                       ;;
-                   export)
+                       main_options=(':->nixops_machines')
                        break
                        ;;
                    import)
@@ -978,8 +971,39 @@ function _nix_completion () {
                   ${nixops_common_arguments[*]} \
                   ${main_options[*]} \
                   ${nix_boilerplate_opts[*]} && return 0
+
+            local statecmd
+            if [[ "${opts[--state]}" || "${opts[-s]}" ]]; then
+                local statefile="${opt_args[--state]:-${opt_args[-s]}}"
+                if [[ "$statefile" == *.nixops && -f "$statefile" ]]; then
+                    statecmd="--state $statefile"
+                fi
+            fi
+
+            local deploymentcmd
+            if [[ "${opts[--deployment]}" || "${opts[-d]}" ]]; then
+                local deployment="${opt_args[--deployment]:-${opt_args[-d]}}"
+                deploymentcmd="--deployment $deployment"
+            fi
+
+            case "$state" in
+                nixops_deployments)
+                    local -a deployments=()
+                    while read -r _ id _ name _; do deployments+=("$id" "$name")
+                    done < <(nixops list $statecmd | tail -n +4 | head -n -1)
+                    COMPREPLY=($(compgen -W "${deployments[*]}" -- "$cur"))
+                    return
+                    ;;
+                nixops_machines)
+                    local -a machines=()
+                    while read -r _ name _; do machines+=("$name")
+                    done < <(nixops info $statecmd $deploymentcmd | tail -n +10 | head -n -1)
+                    COMPREPLY=($(compgen -W "${machines[*]}" -- "$cur"))
+                    return
+                    ;;
+            esac
            ;;
-       nix)
+        nix)
            type nix &> /dev/null || return
 
            local -a common_options
@@ -1400,4 +1424,4 @@ complete -F _nix_completion \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
           nixos-container nixos-generate-config nixos-build-vms \
-          nix nixos-option
+          nix nixos-option nixops
