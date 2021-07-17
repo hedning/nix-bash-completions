@@ -792,7 +792,7 @@ function _nix_completion () {
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_nixos_rebuild[*]} \
                 "*--option:->nixoption:->nixoptionvalue" \
-                '--upgrade' '--install-grub' "--no-build-nix"             \
+                '--upgrade' '--install-bootloader' "--no-build-nix"             \
                 '--fast' '--rollback'                                     \
                 '(--profile-name|-p)'{--profile-name,-p}':->profile-name'  \
                 ':->main_command' && return 0
