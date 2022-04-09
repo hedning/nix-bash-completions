@@ -1392,6 +1392,24 @@ NIX_FILE
     done
     return 1
 }
+
+# Configure 'nix' completion provider: nix>=2.4 contains its own completions,
+# prefer those.
+function _configure_modern_nix_cli_completion () {
+    local version_line versions maj_ver min_ver
+    version_line="$(nix --version || true)"
+    IFS='.' read -r -a versions <<< "${version_line##* }"
+    maj_ver="${versions[0]}"
+    min_ver="${versions[1]}"
+    if [[ "$maj_ver" -ge 2 ]] && [[ "$min_ver" -ge 4 ]]; then
+        # Nix has completion
+        source "$(dirname "$(realpath "$(command -v nix)")")"/../share/bash-completion/completions/nix
+        return
+    fi
+    # Fallback for old Nix
+    complete -F _nix_completion nix
+}
+
 # Set up the completion for all relevant commands
 complete -F _nix_completion \
           nix-build nix-shell nix-env nix-store \
@@ -1400,4 +1418,6 @@ complete -F _nix_completion \
           nix-install-package nix-prefetch-url nix-push \
           nixos-rebuild nixos-install nixos-version \
           nixos-container nixos-generate-config nixos-build-vms \
-          nix nixos-option
+          nixos-option
+
+_configure_modern_nix_cli_completion
