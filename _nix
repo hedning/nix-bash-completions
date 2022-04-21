@@ -1397,8 +1397,10 @@ NIX_FILE
 # prefer those.
 function _configure_modern_nix_cli_completion () {
     local version_line versions maj_ver min_ver
-    version_line="$(nix --version || true)"
-    IFS='.' read -r -a versions <<< "${version_line##* }"
+    version_line=$(nix --version 2> /dev/null) || return
+    version_line=${version_line##* }
+    version_line=${version_line%%[[:alpha:]]*}
+    IFS='.' read -r -a versions <<< "$version_line"
     maj_ver="${versions[0]}"
     min_ver="${versions[1]}"
     if [[ "$maj_ver" -ge 2 ]] && [[ "$min_ver" -ge 4 ]]; then
