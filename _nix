@@ -792,8 +792,10 @@ function _nix_completion () {
                 ${nix_boilerplate_opts[*]} \
                 ${nix_common_nixos_rebuild[*]} \
                 "*--option:->nixoption:->nixoptionvalue" \
-                '--upgrade' '--install-bootloader' "--no-build-nix"             \
-                '--fast' '--rollback'                                     \
+                '--upgrade' '--install-bootloader' "--no-build-nix" \
+                '--fast' '--rollback' '--recreate-lock-file' \
+                '--no-update-lock-file' 'no-write-lock-file' 'no-registries' \
+                '--commit-lock-file' '--no-flake' \
                 '(--profile-name|-p)'{--profile-name,-p}':->profile-name'  \
                 ':->main_command' && return 0
             ;;
