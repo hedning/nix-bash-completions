@@ -98,7 +98,15 @@ function _nix_eval_stdin () {
     done
 
     # Eval stdin 
-    NIX_PATH=$override nix-instantiate --eval - 2> /dev/null | tr '"[]' ' '
+    if [[ -n "$override" ]]; then
+        NIX_PATH=$override nix-instantiate --eval - 2> /dev/null | tr '"[]' ' '
+    else
+        # Don't set NIX_PATH to empty string, as that'll overwrite/clear Nix'
+        # built-in default (since version 2.4+). Nix 2.3 and older sets
+        # NIX_PATH in shell initialization files, which means for those
+        # versions we already have it in $override (code path above).
+        nix-instantiate --eval - 2> /dev/null | tr '"[]' ' '
+    fi
 }
 
 # Resolve any urls ourselves, as nix will start downloading and block
