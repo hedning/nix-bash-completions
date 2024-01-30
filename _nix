@@ -810,7 +810,7 @@ function _nix_completion () {
             ;;
         nixos-version)
             _parse ${nix_boilerplate_opts[*]} \
-                   '(-*)'{--hash,--revision} && return 0
+                   '(-*)'{--hash,--revision,--configuration-revision,--json} && return 0
             ;;
         nixos-container)
             main_commands=(
